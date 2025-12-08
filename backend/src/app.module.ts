@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
+import { MailModule } from './mail/mail.module';
 import { UserModule } from './user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
-import { SetupTokenModule } from './setup-token/setup-token.module';
 import { RefreshTokenModule } from './refresh-token/refresh-token.module';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { AuthorizationModule } from './authorization/authorization.module';
-import { MailModule } from './mail/mail.module';
+import { TeamModule } from './team/team.module';
 
 @Module({
   imports: [
@@ -26,12 +26,12 @@ import { MailModule } from './mail/mail.module';
       synchronize: true,
     }),
     UserModule,
-    SetupTokenModule,
-    RefreshTokenModule,
-    AuthorizationModule,
-    AuthenticationModule,
     MailModule,
     RefreshTokenModule,
+    AuthorizationModule,
+    RefreshTokenModule,
+    AuthenticationModule,
+    TeamModule,
   ],
   controllers: [AppController],
   providers: [AppService],
