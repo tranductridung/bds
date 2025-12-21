@@ -4,6 +4,7 @@ import { UserModule } from 'src/user/user.module';
 import { forwardRef, Module } from '@nestjs/common';
 import { UserRole } from './entities/user-role.entity';
 import { Permission } from './entities/permission.entity';
+import { PermissionsGuard } from './guards/permission.guard';
 import { AuthorizationService } from './authorization.service';
 import { RolePermission } from './entities/role-permission.entity';
 import { AuthorizationController } from './authorization.controller';
@@ -14,7 +15,7 @@ import { AuthorizationController } from './authorization.controller';
     forwardRef(() => UserModule),
   ],
   controllers: [AuthorizationController],
-  providers: [AuthorizationService],
-  exports: [AuthorizationService],
+  providers: [AuthorizationService, PermissionsGuard],
+  exports: [AuthorizationService, PermissionsGuard],
 })
 export class AuthorizationModule {}

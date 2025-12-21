@@ -10,6 +10,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { RolePermission } from './role-permission.entity';
+import { Level } from '../enums/authorization.enum';
 
 @Entity()
 @Unique(['resource', 'action'])
@@ -39,6 +40,9 @@ export class Permission {
 
   @Column()
   key: string;
+
+  @Column({ type: 'enum', enum: Level, default: Level.BUSINESS, update: false })
+  level: Level;
 
   @CreateDateColumn({ select: false })
   createdAt: Date;

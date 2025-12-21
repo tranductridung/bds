@@ -1,16 +1,27 @@
+import {
+  Get,
+  Req,
+  Res,
+  Body,
+  Post,
+  Controller,
+  UseGuards,
+} from '@nestjs/common';
 import { LoginDTO } from './dto/login.dto';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { SetupPasswordJwtGuard } from './guards/auth.guard';
 import { SetupPasswordDto } from './dto/setup-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AuthenticationService } from './authentication.service';
-import { Req, Res, Body, Post, Controller, UseGuards } from '@nestjs/common';
+import { ResponseService } from '../common/helpers/response.service';
+import { AuthJwtGuard, SetupPasswordJwtGuard } from './guards/auth.guard';
+import { RefreshTokenService } from './../refresh-token/refresh-token.service';
 
 @Controller('authentication')
 export class AuthController {
   constructor(
     private readonly authenticationService: AuthenticationService,
+    private readonly refreshTokenService: RefreshTokenService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -33,7 +44,7 @@ export class AuthController {
         Number(this.configService.get('MAX_AGE') || 7) * 24 * 60 * 60 * 1000,
     });
 
-    return { accessToken, user };
+    return ResponseService.format({ accessToken, user });
   }
 
   @Post('logout')
@@ -51,7 +62,7 @@ export class AuthController {
       await this.authenticationService.logout(refreshToken);
     }
 
-    return { message: 'Logout success!' };
+    return ResponseService.format({ message: 'Logout successfully!' });
   }
 
   @Post('refresh')
@@ -60,17 +71,22 @@ export class AuthController {
     const refreshToken = cookies?.refreshToken;
     const accessToken = await this.authenticationService.refresh(refreshToken);
 
-    return { accessToken };
+    return ResponseService.format(accessToken);
   }
 
   @Post('forgot-password')
   async forgotPassword(@Body('email') email: string) {
-    return this.authenticationService.sendResetPasswordLink(email);
+    await this.authenticationService.sendResetPasswordLink(email);
+
+    return ResponseService.format({
+      message: 'Reset link is sent to your email!',
+    });
   }
 
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDTO: ResetPasswordDto) {
-    return this.authenticationService.resetPassword(resetPasswordDTO);
+    await this.authenticationService.resetPassword(resetPasswordDTO);
+    return ResponseService.format({ message: 'Reset password successfully!' });
   }
 
   @UseGuards(SetupPasswordJwtGuard)
@@ -79,14 +95,33 @@ export class AuthController {
     @Req() req: Request,
     @Body() setupPasswordDTO: SetupPasswordDto,
   ) {
-    return this.authenticationService.setupPassword(
+    await this.authenticationService.setupPassword(
       Number(req.user?.id),
       setupPasswordDTO,
     );
+
+    return ResponseService.format({ message: 'Setup password successfully!' });
   }
 
   @Post('resend-setup-password-email')
   async resendSetupPasswordEmail(@Body('email') email: string) {
-    return this.authenticationService.resendSetupPasswordEmail(email);
+    await this.authenticationService.resendSetupPasswordEmail(email);
+    return ResponseService.format({
+      message: 'A setup password link has been sent to your email!',
+    });
+  }
+
+  @UseGuards(AuthJwtGuard)
+  @Get('tokens')
+  async findAllToken() {
+    const tokens = await this.refreshTokenService.find();
+    return tokens;
+  }
+
+  @UseGuards(AuthJwtGuard)
+  @Get('tokens/:tokenId')
+  async findToken(id: string) {
+    const token = await this.refreshTokenService.findOne(id);
+    return token;
   }
 }

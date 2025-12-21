@@ -9,10 +9,10 @@ import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { UserStatus } from 'src/common/enums/enum';
 import { UserService } from '../user/user.service';
 import { MailService } from '../mail/mail.service';
 import { User } from 'src/user/entities/user.entity';
+import { UserStatus } from '../user/enums/user.enum';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SetupPasswordDto } from './dto/setup-password.dto';
 import { UserPayload } from './interfaces/user-payload.interface';
@@ -111,7 +111,7 @@ export class AuthenticationService {
     }
 
     const user = await this.userService.findOne(userPayload.id);
-    const userRoles = await this.authorizationService.getUserRoles(user.id);
+    const roles = await this.authorizationService.getRolesOfUser(user.id);
 
     // Check if token is exist in database
     await this.refreshTokenService.isTokenExist(refreshToken, user.id);
@@ -121,7 +121,7 @@ export class AuthenticationService {
         id: user.id,
         email: user.email,
         fullName: user.fullName,
-        roles: userRoles.roles.map((role) => role.name),
+        roles: roles.map((role) => role.name),
       },
       {
         secret: this.configService.get('ACCESS_TOKEN'),
@@ -156,11 +156,6 @@ export class AuthenticationService {
 
     const resetPwdLink = `${frontendUrl}/authentication/reset-password?token=${token}`;
     await this.mailService.resetPasswordEmail(user.email, resetPwdLink);
-
-    return {
-      success: true,
-      message: 'Reset link is sent to your email!',
-    };
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
@@ -174,8 +169,6 @@ export class AuthenticationService {
         resetPasswordDto.newPassword,
         payload.sub,
       );
-
-      return { message: 'Reset password success!' };
     } catch (error) {
       throw new UnauthorizedException('Token invalid or expired!');
     }
@@ -194,7 +187,6 @@ export class AuthenticationService {
     user.status = UserStatus.ACTIVE;
 
     await this.dataSource.manager.save(user);
-    return { message: 'Setup password success!' };
   }
 
   async resendSetupPasswordEmail(email: string) {
@@ -203,15 +195,10 @@ export class AuthenticationService {
       .where('user.email = :email', { email })
       .getOne();
 
-    const successResponse = {
-      success: true,
-      message: 'A setup password link has been sent to your email!',
-    };
-
     // Return if user not exist
     if (!user) {
       await new Promise((r) => setTimeout(r, 1000 + Math.random() * 500));
-      return successResponse;
+      return;
     }
 
     if (user.status !== UserStatus.UNVERIFIED)
@@ -233,7 +220,5 @@ export class AuthenticationService {
 
     const setupPwdLink = `${frontendUrl}/authentication/setup-password?token=${token}`;
     await this.mailService.setupPasswordEmail(user.email, setupPwdLink);
-
-    return successResponse;
   }
 }

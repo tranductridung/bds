@@ -5,10 +5,10 @@ import {
   ManyToOne,
   JoinColumn,
   CreateDateColumn,
+  UpdateDateColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { User } from 'src/user/entities/user.entity';
-
+import { User } from '@/src/user/entities/user.entity';
 @Entity()
 export class RefreshToken {
   @PrimaryGeneratedColumn('uuid')
@@ -17,18 +17,15 @@ export class RefreshToken {
   @Column({ type: 'text' })
   hashedToken: string;
 
-  @Column({ length: 255, nullable: true })
-  userAgent: string;
-
-  @Column({ length: 100, nullable: true })
-  ipAddress: string;
-
   @Column()
   @Index()
   expiredAt: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ select: false })
   createdAt: Date;
+
+  @UpdateDateColumn({ select: false })
+  updatedAt: Date;
 
   @ManyToOne(() => User, (user) => user.refreshTokens, {
     onDelete: 'CASCADE',

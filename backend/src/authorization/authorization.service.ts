@@ -8,7 +8,6 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { Role } from './entities/role.entity';
-import { UserStatus } from '../common/enums/enum';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
@@ -21,6 +20,7 @@ import { RolePermission } from './entities/role-permission.entity';
 import { CreatePermissionDto } from './dtos/create-permission.dto';
 import { UpdatePermissionDto } from './dtos/update-permission.dto';
 import { DataSource, EntityManager, In, Repository } from 'typeorm';
+import { Level } from './enums/authorization.enum';
 
 @Injectable()
 export class AuthorizationService {
@@ -40,8 +40,8 @@ export class AuthorizationService {
   ) {}
 
   private async assertSuperadmin(userId: number) {
-    const roles = await this.getUserRoles(userId);
-    const isSuperadmin = roles.roles.some(
+    const roles = await this.getRolesOfUser(userId);
+    const isSuperadmin = roles.some(
       (r) => r.name.toLowerCase() === 'superadmin',
     );
     if (!isSuperadmin) {
@@ -93,21 +93,16 @@ export class AuthorizationService {
         });
       }
 
-      const [roles, total] = await queryBuilder
-        .skip(page * limit)
-        .take(limit)
-        .getManyAndCount();
-
-      return { roles, total };
-    } else {
-      const roles = await queryBuilder.getMany();
-      return roles;
+      queryBuilder.skip(page * limit).take(limit);
     }
+    const [roles, total] = await queryBuilder.getManyAndCount();
+
+    return { roles, total };
   }
 
   async updateRole(id: number, updateRoleDto: UpdateRoleDto) {
     if (updateRoleDto.name === 'superadmin')
-      throw new BadRequestException('Cannot update superadmin role!');
+      throw new BadRequestException('Cannot update SuperAdmin role!');
 
     const role = await this.findRole(id);
 
@@ -121,10 +116,9 @@ export class AuthorizationService {
     const role = await this.findRole(id);
 
     if (role.name === 'superadmin')
-      throw new BadRequestException('Cannot delete Superadmin role!');
+      throw new BadRequestException('Cannot remove SuperAdmin role!');
 
     await this.roleRepo.remove(role);
-    return { message: 'Delete role success!' };
   }
 
   // -------------------------------- PERMISSIONS --------------------------------
@@ -195,16 +189,10 @@ export class AuthorizationService {
         });
       }
 
-      const [permissions, total] = await queryBuilder
-        .skip(page * limit)
-        .take(limit)
-        .getManyAndCount();
-
-      return { permissions, total };
-    } else {
-      const permissions = await queryBuilder.getMany();
-      return permissions;
+      queryBuilder.skip(page * limit).take(limit);
     }
+    const [permissions, total] = await queryBuilder.getManyAndCount();
+    return { permissions, total };
   }
 
   async findPermission(id: number) {
@@ -216,6 +204,9 @@ export class AuthorizationService {
   async updatePermission(id: number, updatePermissionDto: UpdatePermissionDto) {
     const permission = await this.findPermission(id);
 
+    if (permission.level === Level.SYSTEM)
+      throw new ForbiddenException('Cannot update system level permission');
+
     this.permissionRepo.merge(permission, updatePermissionDto);
     await this.permissionRepo.save(permission);
 
@@ -224,9 +215,10 @@ export class AuthorizationService {
 
   async removePermission(id: number) {
     const permission = await this.findPermission(id);
+    if (permission.level === Level.SYSTEM)
+      throw new ForbiddenException('Cannot remove system permisison');
 
     await this.permissionRepo.remove(permission);
-    return { message: 'Delete permission success!' };
   }
 
   async findPermissionMeta() {
@@ -349,15 +341,6 @@ export class AuthorizationService {
       user: { id: userId },
       role: { id: role.id },
     });
-
-    // const countUserRole = await this.userRoleRepo.count({
-    //   where: { user: { id: userId } },
-    // });
-
-    // if (countUserRole === 0)
-    //   await this.userService.changeStatus(userId, UserStatus.PENDING);
-
-    return { message: 'Delete user role success!' };
   }
 
   async checkUserRoleExist(userId: number, roleId: number) {
@@ -383,7 +366,7 @@ export class AuthorizationService {
     return { message: `Removed role success!` };
   }
 
-  async getUserRoles(userId: number) {
+  async getRolesOfUser(userId: number) {
     await this.userService.findOne(userId);
 
     const userRoles = await this.userRoleRepo.find({
@@ -391,7 +374,7 @@ export class AuthorizationService {
       relations: ['role'],
     });
 
-    return { roles: userRoles.map((ur) => ur.role) };
+    return userRoles.map((ur) => ur.role);
   }
 
   // -------------------------------- ROLE PERMISSIONS --------------------------------
@@ -402,9 +385,7 @@ export class AuthorizationService {
       where: { role: { id: roleId } },
       relations: ['permission'],
     });
-    return {
-      permissions: rolePermissions.map((rp) => rp.permission),
-    };
+    return rolePermissions.map((rp) => rp.permission);
   }
 
   async updatePermissionsToRole(roleId: number, permissionIds: number[]) {
@@ -447,16 +428,17 @@ export class AuthorizationService {
   }
 
   async assignPermissionsToRole(roleId: number, permissionId: number) {
-    // Check role exist
+    // Check role and permisison exist
     const role = await this.findRole(roleId);
+    const permission = await this.findPermission(permissionId);
 
     const rolePermissions = this.rolePermisisonRepo.create({
       role,
-      permission: { id: permissionId },
+      permission,
     });
 
     await this.rolePermisisonRepo.save(rolePermissions);
-    return { roleId: role.id };
+    return rolePermissions;
   }
 
   async removePermissionsFromRole(roleId: number, permissionId: number) {
@@ -466,7 +448,6 @@ export class AuthorizationService {
       role: { id: roleId },
       permission: { id: permissionId },
     });
-    return { message: 'Remove permissions from role success!' };
   }
 
   async getPermissionsOfRole(roleId: number) {
@@ -476,9 +457,7 @@ export class AuthorizationService {
       where: { role: { id: roleId } },
       relations: ['permission'],
     });
-    return {
-      permissions: rolePermissions.map((rp) => rp.permission),
-    };
+    return rolePermissions.map((rp) => rp.permission);
   }
 
   // -------------------------------- USER PERMISSIONS --------------------------------
@@ -568,10 +547,6 @@ export class AuthorizationService {
 
     await userRoleRepo.save(newUserRole);
 
-    return {
-      userId,
-      roleId: role.id,
-      message: 'Role assigned successfully',
-    };
+    return newUserRole;
   }
 }
