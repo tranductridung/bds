@@ -21,7 +21,7 @@ export class SuperAdminGuard implements CanActivate {
 
     if (!user) throw new UnauthorizedException();
 
-    const { roles } = await this.authorizationService.getUserRoles(user.id);
+    const roles = await this.authorizationService.getRolesOfUser(user.id);
 
     const isSuperadmin = roles.some(
       (role) => role.name.toLowerCase() === SUPERADMIN,

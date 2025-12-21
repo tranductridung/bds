@@ -1,8 +1,9 @@
 import {
+  Inject,
+  forwardRef,
   Injectable,
   NotFoundException,
   ConflictException,
-  ForbiddenException,
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -13,7 +14,7 @@ import { ConfigService } from '@nestjs/config';
 import { Repository, DataSource } from 'typeorm';
 import { MailService } from '../mail/mail.service';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserStatus } from 'src/common/enums/enum';
+import { UserStatus } from '../user/enums/user.enum';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDTO } from './dto/change-pass.dto';
@@ -30,6 +31,7 @@ export class UserService {
     private readonly dataSource: DataSource,
     private readonly mailService: MailService,
     private readonly jwtService: JwtService,
+    @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
   ) {}
 
@@ -53,16 +55,11 @@ export class UserService {
         });
       }
 
-      const [users, total] = await queryBuilder
-        .skip(page * limit)
-        .take(limit)
-        .getManyAndCount();
-
-      return { users, total };
-    } else {
-      const users = await queryBuilder.getMany();
-      return users;
+      queryBuilder.skip(page * limit).take(limit);
     }
+    const [users, total] = await queryBuilder.getManyAndCount();
+
+    return { users, total };
   }
 
   async findByEmail(email: string, isActive?: boolean) {
@@ -97,6 +94,11 @@ export class UserService {
     };
   }
 
+  async isSystemUser(userId: number) {
+    const user = await this.findOne(userId, true, true);
+    return user.userRoles.some((ur) => ur.role.isSystem);
+  }
+
   async findOne(id: number, isActive?: boolean, getUserRoles?: boolean) {
     const queryBuilder = this.userRepo.createQueryBuilder('user');
 
@@ -129,7 +131,7 @@ export class UserService {
     const user = await this.findOne(id);
     user.status = status;
     await this.userRepo.save(user);
-    return { message: `User status is changed to ${user.status}` };
+    return user;
   }
 
   async toggleStatus(id: number) {
@@ -139,7 +141,7 @@ export class UserService {
         ? UserStatus.INACTIVE
         : UserStatus.ACTIVE;
     await this.userRepo.save(user);
-    return { message: `User status is changed to ${user.status}` };
+    return user;
   }
 
   async updateUser(id: number, updateUserDto: UpdateUserDto) {
@@ -197,11 +199,10 @@ export class UserService {
     );
 
     await this.userRepo.save(user);
-
-    return { message: 'Change password success!' };
   }
 
   async getUserPermission(userId: number, resource?: string) {
+    console.log(userId, resource);
     const permissions = await this.authorizationService.getPermissions(
       userId,
       resource,
@@ -253,15 +254,15 @@ export class UserService {
 
   async createUserBySuperAdmin(
     createUserDto: CreateUserDTO,
-    creatorId: number,
+    // creatorId: number,
   ) {
     // Check if creator is superadmin
-    const creatorRoles =
-      await this.authorizationService.getUserRoles(creatorId);
+    // const creatorRoles =
+    //   await this.authorizationService.getRolesOfUser(creatorId);
 
-    if (!creatorRoles.roles.some((r) => r.name === 'superadmin')) {
-      throw new ForbiddenException('Only superadmin can create users');
-    }
+    // if (!creatorRoles.some((r) => r.name === 'superadmin')) {
+    //   throw new ForbiddenException('Only superadmin can create users');
+    // }
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -279,6 +280,10 @@ export class UserService {
       // Validate role
       if (!createUserDto.role)
         throw new BadRequestException('Role is required');
+
+      if (createUserDto.role === 'superadmin') {
+        throw new BadRequestException('SuperAdmin role cannot be assigned');
+      }
 
       const role = await queryRunner.manager.findOne(Role, {
         where: { name: createUserDto.role },
@@ -308,8 +313,7 @@ export class UserService {
     }
 
     // ---- EMAIL SHOULD BE SENT AFTER COMMIT ----
-    const userRoles = await this.authorizationService.getUserRoles(newUser.id);
-    const roles = userRoles.roles.map((r) => r.name);
+    const roles = await this.authorizationService.getRolesOfUser(newUser.id);
 
     const frontendUrl = this.configService.get<string>('FRONTEND_URL');
     const payload = {

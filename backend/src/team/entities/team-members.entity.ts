@@ -1,16 +1,19 @@
 import {
   Entity,
   Unique,
+  Column,
   ManyToOne,
   JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
   PrimaryGeneratedColumn,
-  Column,
 } from 'typeorm';
 import { Team } from './team.entity';
 import { User } from '@/src/user/entities/user.entity';
+import { MemberRole } from '../enums/member-role.enum';
 
 @Entity('teams_members')
-@Unique(['team', 'user'])
+@Unique(['team', 'member'])
 export class TeamMember {
   @PrimaryGeneratedColumn()
   id: number;
@@ -21,7 +24,16 @@ export class TeamMember {
   @Column({ nullable: true })
   leftAt?: Date;
 
-  @ManyToOne(() => User, (user) => user.teamMember, {
+  @Column({ type: 'enum', enum: MemberRole, default: MemberRole.MEMBER })
+  role: MemberRole;
+
+  @CreateDateColumn({ select: false })
+  createdAt: Date;
+
+  @UpdateDateColumn({ select: false })
+  updatedAt: Date;
+
+  @ManyToOne(() => User, (member) => member.teamMember, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'memberId' })

@@ -25,6 +25,6 @@ export class Team {
   @UpdateDateColumn({ select: false })
   updatedAt: Date;
 
-  @OneToMany(() => TeamMember, (tm) => tm.user)
+  @OneToMany(() => TeamMember, (tm) => tm.member)
   teamMember: TeamMember[];
 }

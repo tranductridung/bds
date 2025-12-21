@@ -7,7 +7,6 @@ import { AuthController } from './authentication.controller';
 import { AuthenticationService } from './authentication.service';
 import { RefreshJwtStrategy } from './strategies/refresh-jwt.strategy';
 import { RefreshTokenModule } from '../refresh-token/refresh-token.module';
-import { PermissionsGuard } from '../authorization/guards/permission.guard';
 import { AuthorizationModule } from 'src/authorization/authorization.module';
 import { SetupPasswordJwtStrategy } from './strategies/setup-password-jwt.strategy';
 
@@ -22,11 +21,10 @@ import { SetupPasswordJwtStrategy } from './strategies/setup-password-jwt.strate
   providers: [
     JwtStrategy,
     MailService,
-    PermissionsGuard,
     RefreshJwtStrategy,
     AuthenticationService,
     SetupPasswordJwtStrategy,
   ],
-  exports: [AuthenticationService, PermissionsGuard],
+  exports: [AuthenticationService],
 })
 export class AuthenticationModule {}

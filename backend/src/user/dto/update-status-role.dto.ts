@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { UserStatus } from 'src/common/enums/enum';
+import { UserStatus } from '../enums/user.enum';
 import { IsEnum, IsInt, IsOptional } from 'class-validator';
 
 export class UpdateStatusRoleDTO {

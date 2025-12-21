@@ -17,7 +17,7 @@ export class RoleSeed {
   ) {}
 
   async seed() {
-    const defaultSystemRoles = ['superadmin', 'admin'];
+    const defaultSystemRoles = ['superadmin', 'admin', 'staff'];
 
     for (const roleName of defaultSystemRoles) {
       // Find or create role
@@ -43,8 +43,15 @@ export class RoleSeed {
       const newRolePermissions: RolePermission[] = [];
 
       for (const permission of permissions) {
-        if (roleName === 'admin' && permission.resource === 'authorization') {
-          continue; // admin dont have manage system permission
+        if (
+          roleName !== 'superadmin' &&
+          permission.resource === 'authorization'
+        ) {
+          continue; // User not superadmin dont have manage system permission
+        }
+
+        if (roleName === 'staff' && permission.resource === 'testadmin') {
+          continue; // Staff user dont have testadmin permission
         }
 
         if (!existingPermissionIds.has(permission.id)) {

@@ -1,7 +1,8 @@
 import {
   Req,
-  Body,
   Get,
+  Post,
+  Body,
   Query,
   Param,
   Patch,
@@ -9,16 +10,17 @@ import {
   Controller,
   ParseIntPipe,
   BadRequestException,
-  Post,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { UserService } from './user.service';
-import { UserStatus } from 'src/common/enums/enum';
+import { UserStatus } from './enums/user.enum';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDTO } from './dto/change-pass.dto';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { AuthJwtGuard } from '../authentication/guards/auth.guard';
+import { ResponseService } from '../common/helpers/response.service';
+import { SuperAdminGuard } from '../authorization/guards/superadmin.guard';
 import { PermissionsGuard } from 'src/authorization/guards/permission.guard';
 import { UserPayload } from '../authentication/interfaces/user-payload.interface';
 import { RequirePermissions } from '../authentication/decorators/permissions.decorator';
@@ -29,18 +31,18 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @RequirePermissions('user:create')
+  @UseGuards(SuperAdminGuard)
   @Post()
   async create(@Req() req: Request, @Body() createUserDto: CreateUserDTO) {
-    return await this.userService.createUserBySuperAdmin(
-      createUserDto,
-      Number(req?.user?.id),
-    );
+    const user = await this.userService.createUserBySuperAdmin(createUserDto);
+    return ResponseService.format(user);
   }
 
   @RequirePermissions('user:read')
   @Get()
   async findAll(@Query() paginationDto: PaginationDto) {
-    return await this.userService.findAll(paginationDto);
+    const { users, total } = await this.userService.findAll(paginationDto);
+    return ResponseService.format(users, { total });
   }
 
   @RequirePermissions('user:update')
@@ -54,7 +56,8 @@ export class UserController {
     if (id === currentUser?.id)
       throw new BadRequestException('Cannot change status by yourself!');
 
-    return await this.userService.changeStatus(id, body.status);
+    const user = await this.userService.changeStatus(id, body.status);
+    return ResponseService.format(user);
   }
 
   @RequirePermissions('user:update')
@@ -67,19 +70,18 @@ export class UserController {
     if (id === currentUser?.id)
       throw new BadRequestException('Cannot change status by yourself!');
 
-    return await this.userService.toggleStatus(id);
+    const user = await this.userService.toggleStatus(id);
+    return ResponseService.format(user);
   }
 
   @Get('me')
-  getUserInfor(@Req() req: Request) {
-    return {
-      user: {
-        id: req?.user?.id,
-        email: req?.user?.email,
-        fullName: req?.user?.fullName,
-        roles: req?.user?.roles,
-      },
-    };
+  getUserInfo(@Req() req: Request) {
+    return ResponseService.format({
+      id: req?.user?.id,
+      email: req?.user?.email,
+      fullName: req?.user?.fullName,
+      roles: req?.user?.roles,
+    });
   }
 
   @Get('me/profile')
@@ -87,18 +89,19 @@ export class UserController {
     const userId = Number(req?.user?.id);
 
     const user = await this.userService.findOne(userId, undefined, undefined);
-    return { user };
+    return ResponseService.format(user);
   }
 
   @Patch('me')
   async updateProfile(@Req() req: Request, @Body() data: UpdateUserDto) {
     const user = await this.userService.updateUser(Number(req?.user?.id), data);
-    return { user };
+    return ResponseService.format(user);
   }
 
   @Patch('me/password')
   async changePassword(@Req() req: Request, @Body() data: ChangePasswordDTO) {
-    return await this.userService.changePassword(data, Number(req?.user?.id));
+    await this.userService.changePassword(data, Number(req?.user?.id));
+    return ResponseService.format({ message: 'Change password successfully!' });
   }
 
   @Get('me/permissions')
@@ -110,7 +113,6 @@ export class UserController {
       Number(req?.user?.id),
       resource,
     );
-
-    return permissions;
+    return ResponseService.format(permissions);
   }
 }

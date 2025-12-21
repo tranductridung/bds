@@ -1,6 +1,6 @@
+import { Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { Permission } from 'src/authorization/entities/permission.entity';
 
 @Injectable()
@@ -13,39 +13,19 @@ export class PermissionSeed {
   async seed() {
     const resourceActions: Record<string, string[]> = {
       default: ['create', 'read', 'update', 'delete'],
-
-      dashboard: ['read'],
-      report: ['read'],
-      revenue: ['read'],
-
-      order: ['cancel', 'export'],
-      purchase: ['cancel', 'import'],
-      consignment: ['cancel', 'import', 'export'],
-      item: ['cancel', 'import', 'export', 'transfer'],
     };
 
     const resources = [
       'authorization',
-      'appointment',
-      'consignment',
-      'course',
-      'dashboard',
-      'discount',
-      'enrollment',
-      'inventory',
-      'item',
-      'modules',
-      'order',
-      'partner',
-      'payment',
-      'product',
-      'purchase',
-      'report',
-      'revenue',
-      'room',
-      'service',
-      'transaction',
       'user',
+      'team',
+      'property',
+      'agent',
+      'feature',
+      'image',
+      'rating',
+
+      'team-member',
     ];
 
     // Get current permission in DB
