@@ -67,11 +67,8 @@ export class PropertyController {
   @RequirePermissions('property:read')
   @UseGuards(PropertyAccessGuard)
   @Get(':propertyId')
-  async find(
-    @Req() req: Request,
-    @Param('propertyId', ParseIntPipe) propertyId: number,
-  ) {
-    const property = await this.propertyService.exist(propertyId);
+  async find(@Param('propertyId', ParseIntPipe) propertyId: number) {
+    const property = await this.propertyService.findOne(propertyId);
     return ResponseService.format(property);
   }
 
@@ -125,7 +122,7 @@ export class PropertyController {
   }
 
   // PROPERTY RATING
-  @RequirePermissions('rating:create')
+  @RequirePermissions('property:rating:create')
   @UseGuards(PropertyAccessGuard)
   @Post(':propertyId/ratings')
   async createRating(
@@ -137,7 +134,7 @@ export class PropertyController {
     return ResponseService.format(rating);
   }
 
-  @RequirePermissions('rating:read')
+  @RequirePermissions('property:rating:read')
   @UseGuards(PropertyAccessGuard)
   @Get(':propertyId/ratings')
   async findAllRatingsOfProperty(
@@ -154,7 +151,7 @@ export class PropertyController {
   }
 
   // PROPERTY FEATURE
-  @RequirePermissions('feature:create')
+  @RequirePermissions('property:feature:create')
   @UseGuards(PropertyAccessGuard)
   @Post(':propertyId/features')
   async addFeatureToProperty(
@@ -170,7 +167,7 @@ export class PropertyController {
     return ResponseService.format(propertyFeature);
   }
 
-  @RequirePermissions('feature:read')
+  @RequirePermissions('property:feature:read')
   @Get(':propertyId/features')
   @UseGuards(PropertyAccessGuard)
   async getFeaturesOfProperty(
@@ -186,7 +183,7 @@ export class PropertyController {
     return ResponseService.format(features, { total });
   }
 
-  @RequirePermissions('feature:delete')
+  @RequirePermissions('property:feature:delete')
   @UseGuards(PropertyAccessGuard)
   @Delete(':propertyId/features/:featureId')
   async removeFeatureOfProperty(
@@ -202,7 +199,7 @@ export class PropertyController {
   }
 
   // PROPERTY AGENT
-  @RequirePermissions('agent:create')
+  @RequirePermissions('property:agent:create')
   @UseGuards(SystemUserGuard)
   @Post(':propertyId/agents')
   async addAgentToProperty(
@@ -217,7 +214,7 @@ export class PropertyController {
     return ResponseService.format(propertyAgent);
   }
 
-  @RequirePermissions('agent:read')
+  @RequirePermissions('property:agent:read')
   @Get(':propertyId/agents')
   @UseGuards(PropertyAccessGuard)
   async getAgentsOfProperty(
@@ -234,7 +231,7 @@ export class PropertyController {
     return ResponseService.format(agents, { total });
   }
 
-  @RequirePermissions('agent:delete')
+  @RequirePermissions('property:agent:delete')
   @Delete(':propertyId/agents/:agentId')
   @UseGuards(SystemUserGuard)
   async removeAgentOfProperty(

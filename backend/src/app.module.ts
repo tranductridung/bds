@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TeamModule } from './team/team.module';
 import { MailModule } from './mail/mail.module';
 import { UserModule } from './user/user.module';
+import { LeadModule } from './lead/lead.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { FeatureModule } from './feature/feature.module';
@@ -43,6 +44,7 @@ import { AuthenticationModule } from './authentication/authentication.module';
     PropertyImageModule,
     PropertyAgentModule,
     AuthenticationModule,
+    LeadModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -25,7 +25,7 @@ import { RequirePermissions } from '../authentication/decorators/permissions.dec
 export class FeatureController {
   constructor(private readonly featureService: FeatureService) {}
 
-  @RequirePermissions('feature:create')
+  @RequirePermissions('property:feature:create')
   @UseGuards(SystemUserGuard)
   @Post()
   async create(@Body() createFeatureDto: CreateFeatureDto) {
@@ -33,7 +33,7 @@ export class FeatureController {
     return ResponseService.format(feature);
   }
 
-  @RequirePermissions('feature:read')
+  @RequirePermissions('property:feature:read')
   @UseGuards(SystemUserGuard)
   @Get()
   async findAll(@Query() paginationDto: PaginationDto) {
@@ -46,7 +46,7 @@ export class FeatureController {
     });
   }
 
-  @RequirePermissions('feature:read')
+  @RequirePermissions('property:feature:read')
   @UseGuards(SystemUserGuard)
   @Get(':featureId')
   async find(@Param('featureId', ParseIntPipe) featureId: number) {
@@ -54,7 +54,7 @@ export class FeatureController {
     return ResponseService.format(feature);
   }
 
-  @RequirePermissions('feature:update')
+  @RequirePermissions('property:feature:update')
   @UseGuards(SystemUserGuard)
   @Patch(':featureId')
   async update(
@@ -68,7 +68,7 @@ export class FeatureController {
     return ResponseService.format(feature);
   }
 
-  @RequirePermissions('feature:delete')
+  @RequirePermissions('property:feature:delete')
   @Delete(':featureId')
   @UseGuards(SystemUserGuard)
   async remove(@Param('featureId', ParseIntPipe) featureId: number) {

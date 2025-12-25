@@ -3,9 +3,9 @@ import {
   Unique,
   ManyToOne,
   JoinColumn,
-  PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Property } from './property.entity';
 import { User } from '@/src/user/entities/user.entity';
@@ -17,13 +17,13 @@ export class PropertyAgent {
   id: number;
 
   @ManyToOne(() => User, (agent) => agent.propertiesAgents, {
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'agentId' })
   agent: User;
 
   @ManyToOne(() => Property, (property) => property.propertiesAgents, {
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'propertyId' })
   property: Property;

@@ -1,7 +1,6 @@
 import {
   Injectable,
   NotFoundException,
-  ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
 import {
@@ -26,27 +25,6 @@ export class PropertyService {
     private readonly propertyAgentRepo: Repository<PropertyAgent>,
     private readonly userService: UserService,
   ) {}
-
-  async assertCanAccessProperty(
-    userId: number,
-    propertyId: number,
-  ): Promise<void> {
-    // System role bypass
-    const isSystem = await this.userService.isSystemUser(userId);
-    if (isSystem) return;
-
-    // Staff must be agent
-    const isAgent = await this.propertyAgentRepo.exists({
-      where: {
-        property: { id: propertyId },
-        agent: { id: userId },
-      },
-    });
-
-    if (!isAgent)
-      throw new ForbiddenException('You are not assigned to this property');
-  }
-
   async create(createPropertyDto: CreatePropertyDto): Promise<Property> {
     if (
       (createPropertyDto.latitude && !createPropertyDto.longitude) ||

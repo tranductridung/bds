@@ -1,5 +1,4 @@
 import {
-  Check,
   Column,
   Entity,
   ManyToOne,
@@ -8,19 +7,15 @@ import {
   UpdateDateColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Property } from './property.entity';
+import { Lead } from '../core/lead.entity';
 
 @Entity()
-@Check(`"rating" >= 1 AND "rating" <= 5`)
-export class Rating {
+export class LeadNote {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
-  rating: number;
-
-  @Column({ type: 'text', nullable: true })
-  comment?: string;
+  content: string;
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
@@ -28,9 +23,9 @@ export class Rating {
   @UpdateDateColumn({ select: false })
   updatedAt: Date;
 
-  @ManyToOne(() => Property, (property) => property.ratings, {
+  @ManyToOne(() => Lead, (lead) => lead.leadNotes, {
     onDelete: 'RESTRICT',
   })
-  @JoinColumn({ name: 'propertyId' })
-  property: Property;
+  @JoinColumn({ name: 'leadId' })
+  lead: Lead;
 }

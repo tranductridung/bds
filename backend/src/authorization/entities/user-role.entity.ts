@@ -15,13 +15,13 @@ export class UserRole {
   id: number;
 
   @ManyToOne(() => Role, (role) => role.userRoles, {
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'roleId' })
   role: Role;
 
   @ManyToOne(() => User, (user) => user.userRoles, {
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'userId' })
   user: User;
