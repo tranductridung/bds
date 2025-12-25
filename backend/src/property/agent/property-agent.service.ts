@@ -1,7 +1,6 @@
 import {
   Injectable,
   NotFoundException,
-  ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
@@ -22,9 +21,6 @@ export class PropertyAgentService {
   async addAgentToProperty(property: Property, agentId: number) {
     // Check if property and agent is exist
     const agent = await this.userService.findOne(agentId, true);
-
-    if (await this.userService.isSystemUser(agentId))
-      throw new ForbiddenException('System user cannot be assigned as agent');
 
     // Check if agent is exist in property
     const propertyAgentExist = await this.propertyAgentRepo.findOne({

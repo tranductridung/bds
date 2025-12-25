@@ -10,6 +10,8 @@ import { IsEnum } from 'class-validator';
 import { UserStatus, Gender } from '../enums/user.enum';
 import { TeamMember } from '@/src/team/entities/team-members.entity';
 import { UserRole } from 'src/authorization/entities/user-role.entity';
+import { LeadActivity } from '@/src/lead/activity/lead-activity.entity';
+import { LeadAssignment } from '@/src/lead/assignment/lead-assignment.entity';
 import { PropertyAgent } from '@/src/property/entities/property-agents.entity';
 import { RefreshToken } from '@/src/refresh-token/entities/refresh-token.entity';
 
@@ -69,4 +71,10 @@ export class User {
 
   @OneToMany(() => PropertyAgent, (pa) => pa.agent)
   propertiesAgents: PropertyAgent[];
+
+  @OneToMany(() => LeadAssignment, (la) => la.agent)
+  leadAssignments: LeadAssignment[];
+
+  @OneToMany(() => LeadActivity, (la) => la.performedBy)
+  leadActivities: LeadActivity[];
 }

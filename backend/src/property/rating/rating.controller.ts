@@ -26,7 +26,7 @@ import { RequirePermissions } from '../../authentication/decorators/permissions.
 export class RatingController {
   constructor(private readonly ratingService: RatingService) {}
 
-  @RequirePermissions('rating:read')
+  @RequirePermissions('property:rating:read')
   @UseGuards(SystemUserGuard)
   @Get()
   async findAll(@Query() paginationDto: PaginationDto) {
@@ -34,7 +34,7 @@ export class RatingController {
     return ResponseService.format(ratings, { total });
   }
 
-  @RequirePermissions('rating:read')
+  @RequirePermissions('property:rating:read')
   @UseGuards(PropertyAccessGuard)
   @Get(':ratingId')
   async findOne(@Param('ratingId', ParseIntPipe) ratingId: number) {
@@ -42,7 +42,7 @@ export class RatingController {
     return ResponseService.format(rating);
   }
 
-  @RequirePermissions('rating:update')
+  @RequirePermissions('property:rating:update')
   @UseGuards(PropertyAccessGuard)
   @Patch(':ratingId')
   async update(
@@ -55,7 +55,7 @@ export class RatingController {
     return ResponseService.format(rating);
   }
 
-  @RequirePermissions('rating:delete')
+  @RequirePermissions('property:rating:delete')
   @UseGuards(PropertyAccessGuard)
   @Delete(':ratingId')
   async remove(@Param('ratingId', ParseIntPipe) ratingId: number) {

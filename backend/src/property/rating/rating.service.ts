@@ -22,7 +22,10 @@ export class RatingService {
     private readonly propertyService: PropertyService,
   ) {}
 
-  async create(property: Property, createRatingDto: CreateRatingDto) {
+  async create(
+    property: Property,
+    createRatingDto: CreateRatingDto,
+  ): Promise<Rating> {
     const rating = this.ratingRepo.create({
       ...createRatingDto,
       property,
@@ -32,7 +35,9 @@ export class RatingService {
     return rating;
   }
 
-  async findAll(paginationDto?: PaginationDto) {
+  async findAll(
+    paginationDto?: PaginationDto,
+  ): Promise<{ ratings: Rating[]; total: number }> {
     const queryBuilder = this.ratingRepo
       .createQueryBuilder('pr')
       .addSelect(['pr.createdAt'])
@@ -52,7 +57,7 @@ export class RatingService {
     return { ratings, total };
   }
 
-  async findOne(ratingId: number) {
+  async findOne(ratingId: number): Promise<Rating> {
     const rating = await this.ratingRepo.findOne({
       where: { id: ratingId },
     });
@@ -62,7 +67,10 @@ export class RatingService {
     return rating;
   }
 
-  async update(ratingId: number, updateRatingDto: UpdateRatingDto) {
+  async update(
+    ratingId: number,
+    updateRatingDto: UpdateRatingDto,
+  ): Promise<Rating> {
     const rating = await this.ratingRepo.findOne({
       where: { id: ratingId },
       relations: ['property'],
@@ -77,10 +85,9 @@ export class RatingService {
     return updatedRating;
   }
 
-  async remove(ratingId: number) {
+  async remove(id: number): Promise<void> {
     const rating = await this.ratingRepo.findOne({
-      where: { id: ratingId },
-      relations: ['property'],
+      where: { id },
     });
 
     if (!rating) throw new NotFoundException('Rating not found!');
@@ -92,7 +99,7 @@ export class RatingService {
   async findRatingsOfProperty(
     propertyId: number,
     paginationDto?: PaginationDto,
-  ) {
+  ): Promise<{ ratings: Rating[]; total: number }> {
     const queryBuilder = this.ratingRepo
       .createQueryBuilder('pr')
       .innerJoin('pr.property', 'property')

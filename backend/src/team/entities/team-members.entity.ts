@@ -34,13 +34,13 @@ export class TeamMember {
   updatedAt: Date;
 
   @ManyToOne(() => User, (member) => member.teamMember, {
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'memberId' })
   member: User;
 
   @ManyToOne(() => Team, (team) => team.teamMember, {
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'teamId' })
   team: Team;

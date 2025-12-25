@@ -79,7 +79,7 @@ export class TeamController {
   }
 
   // TEAM MEMBER
-  @RequirePermissions('team-member:create')
+  @RequirePermissions('team:member:create')
   @Post(':teamId/members')
   async addMemberToTeam(
     @Req() req: Request,
@@ -94,14 +94,14 @@ export class TeamController {
     return ResponseService.format(teamMember);
   }
 
-  @RequirePermissions('team-member:read')
+  @RequirePermissions('team:member:read')
   @Get(':teamId/members')
   async getMembersOfTeam(@Param('teamId', ParseIntPipe) teamId: number) {
     const members = await this.teamService.getMembersOfTeam(teamId);
     return ResponseService.format(members);
   }
 
-  @RequirePermissions('team-member:delete')
+  @RequirePermissions('team:member:delete')
   @Delete(':teamId/members/:memberId')
   async removeMemberFromTeam(
     @Req() req: Request,
@@ -122,7 +122,7 @@ export class TeamController {
     });
   }
 
-  @RequirePermissions('team-member:update')
+  @RequirePermissions('team:member:update')
   @Patch(':teamId/members/:memberId/role')
   async assignRoleForMember(
     @Req() req: Request,

@@ -23,13 +23,13 @@ export class PropertyFeature {
   updatedAt: Date;
 
   @ManyToOne(() => Feature, (feature) => feature.propertiesFeatures, {
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'featureId' })
   feature: Feature;
 
   @ManyToOne(() => Property, (property) => property.propertiesFeatures, {
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'propertyId' })
   property: Property;

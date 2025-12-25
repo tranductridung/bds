@@ -39,7 +39,7 @@ export class PropertyImage {
   updatedAt: Date;
 
   @ManyToOne(() => Property, (property) => property.propertyImages, {
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'propertyId' })
   property: Property;

@@ -19,13 +19,18 @@ export class PermissionSeed {
       'authorization',
       'user',
       'team',
-      'property',
-      'agent',
-      'feature',
-      'image',
-      'rating',
+      'team:member',
 
-      'team-member',
+      'property',
+      'property:agent',
+      'property:feature',
+      'property:image',
+      'property:rating',
+
+      'lead',
+      'lead:assignment',
+      'lead:note',
+      'lead:activity',
     ];
 
     // Get current permission in DB
