@@ -3,7 +3,6 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { Lead } from '../core/lead.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserService } from '@/src/user/user.service';
 import { LeadAssignment } from './lead-assignment.entity';
@@ -26,7 +25,7 @@ export class LeadAssignmentService {
     currentUserId: number,
     leadId: number,
     agentId: number,
-  ): Promise<void> {
+  ) {
     return await this.dataSource.transaction(async (manager) => {
       const assignment = await manager.findOne(LeadAssignment, {
         where: {
@@ -61,29 +60,30 @@ export class LeadAssignmentService {
         { isPrimary: true },
       );
 
+      const oldValue = {
+        primaryAgentId: oldPrimaryAssignment?.agent.id,
+      };
+      const newValue = { primaryAgentId: agentId };
+
       await this.leadActivityService.create(
         leadId,
         {
           action: LeadActivityAction.UPDATE,
           resource: LeadActivityResource.ASSIGNMENT,
           resourceId: assignment.id,
-          oldValue: {
-            primaryAgentId: oldPrimaryAssignment?.agent.id,
-          },
-          newValue: { primaryAgentId: agentId },
+          oldValue,
+          newValue,
           description: `Change primary agent to user #${agentId}`,
           performedById: currentUserId,
         },
         manager,
       );
+
+      return { oldValue, newValue };
     });
   }
 
-  async create(
-    currentUserId: number,
-    lead: Lead,
-    agentId: number,
-  ): Promise<LeadAssignment> {
+  async create(currentUserId: number, leadId: number, agentId: number) {
     return await this.dataSource.transaction(async (manager) => {
       const agent = await this.userService.findOne(agentId, true);
 
@@ -92,7 +92,7 @@ export class LeadAssignmentService {
       // Check if agent is exist in lead
       const leadAgentExist = await repo.findOne({
         where: {
-          lead: { id: lead.id },
+          lead: { id: leadId },
           agent: { id: agentId },
         },
       });
@@ -104,7 +104,7 @@ export class LeadAssignmentService {
 
       const isPrimaryAgentExist = await repo.exists({
         where: {
-          lead: { id: lead.id },
+          lead: { id: leadId },
           isPrimary: true,
         },
       });
@@ -112,28 +112,30 @@ export class LeadAssignmentService {
       const assignment = repo.create({
         isPrimary: !isPrimaryAgentExist,
         agent,
-        lead,
+        lead: { id: leadId },
       });
 
       await repo.save(assignment);
 
+      const newValue = {
+        agentId: assignment.agent.id,
+        isPrimary: assignment.isPrimary,
+      };
+
       await this.leadActivityService.create(
-        lead.id,
+        leadId,
         {
           action: LeadActivityAction.CREATE,
           resource: LeadActivityResource.ASSIGNMENT,
-          newValue: {
-            agentId: assignment.agent.id,
-            isPrimary: assignment.isPrimary,
-          },
+          newValue,
           resourceId: assignment.id,
-          description: `Create new assignment for lead #${lead.id}`,
+          description: `Create new assignment for lead #${leadId}`,
           performedById: currentUserId,
         },
         manager,
       );
 
-      return assignment;
+      return { assignment, newValue };
     });
   }
 
@@ -169,7 +171,7 @@ export class LeadAssignmentService {
       relations: ['agent', 'lead'],
     });
 
-    if (!assignment) throw new NotFoundException('Lead assignment not found');
+    if (!assignment) throw new NotFoundException('Assignment not found');
 
     return assignment;
   }
@@ -188,16 +190,12 @@ export class LeadAssignmentService {
       relations: ['agent', 'lead'],
     });
 
-    if (!assignment) throw new NotFoundException('Lead assignment not found');
+    if (!assignment) throw new NotFoundException('Assignment not found');
 
     return assignment;
   }
 
-  async remove(
-    currentUserId: number,
-    leadId: number,
-    assignmnetId: number,
-  ): Promise<void> {
+  async remove(currentUserId: number, leadId: number, assignmnetId: number) {
     return await this.dataSource.transaction(async (manager) => {
       const assignment = await this.findAssignmentWithLead(
         leadId,
@@ -207,21 +205,25 @@ export class LeadAssignmentService {
 
       await manager.remove(LeadAssignment, assignment);
 
+      const oldValue = {
+        agentId: assignment.agent.id,
+        isPrimary: assignment.isPrimary,
+      };
+
       await this.leadActivityService.create(
         leadId,
         {
           action: LeadActivityAction.DELETE,
           resource: LeadActivityResource.ASSIGNMENT,
-          oldValue: {
-            agentId: assignment.agent.id,
-            isPrimary: assignment.isPrimary,
-          },
+          oldValue,
           resourceId: assignmnetId,
           description: `Remove assignment of lead #${leadId}`,
           performedById: currentUserId,
         },
         manager,
       );
+
+      return { oldValue };
     });
   }
 

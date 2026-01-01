@@ -16,7 +16,7 @@ export class LeadAccessGuard implements CanActivate {
     if (!req?.user) throw new UnauthorizedException();
 
     await this.leadAccessService.assertCanAccessLead(
-      req.user.id,
+      req.user,
       Number(req.params.leadId),
     );
     return true;

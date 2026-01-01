@@ -1,7 +1,6 @@
-import { Lead } from '../core/lead.entity';
 import { LeadNote } from './lead-note.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { buildDiff } from '../helpers/build-diff.helper';
+import { buildDiff } from '../../common/helpers/build-diff.helper';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateLeadNoteDto } from './dto/create-lead-note.dto';
 import { UpdateLeadNoteDto } from './dto/update-lead-note.dto';
@@ -21,31 +20,33 @@ export class LeadNoteService {
 
   async create(
     currentUserId: number,
-    lead: Lead,
+    leadId: number,
     createLeadNoteDto: CreateLeadNoteDto,
-  ): Promise<LeadNote> {
+  ) {
     return await this.dataSource.transaction(async (manager) => {
       const note = manager.create(LeadNote, {
         ...createLeadNoteDto,
-        lead,
+        lead: { id: leadId },
       });
 
       await manager.save(LeadNote, note);
 
+      const newValue = { content: note.content.slice(0, 50) };
+
       await this.leadActivityService.create(
-        lead.id,
+        leadId,
         {
           action: LeadActivityAction.CREATE,
           resource: LeadActivityResource.NOTE,
-          newValue: { content: note.content.slice(0, 50) },
+          newValue,
           resourceId: note.id,
-          description: `Create new note for lead #${lead.id}`,
+          description: `Create new note for lead #${leadId}`,
           performedById: currentUserId,
         },
         manager,
       );
 
-      return note;
+      return { note, newValue };
     });
   }
 
@@ -79,7 +80,7 @@ export class LeadNoteService {
       relations: ['lead'],
     });
 
-    if (!note) throw new NotFoundException('Lead note not found');
+    if (!note) throw new NotFoundException('Note not found');
 
     return note;
   }
@@ -95,33 +96,32 @@ export class LeadNoteService {
       where: { id: noteId, lead: { id: leadId } },
     });
 
-    if (!note) throw new NotFoundException('Lead note not found');
+    if (!note) throw new NotFoundException('Note not found');
 
     return note;
   }
 
-  async remove(
-    currentUserId: number,
-    leadId: number,
-    noteId: number,
-  ): Promise<void> {
+  async remove(currentUserId: number, leadId: number, noteId: number) {
     return await this.dataSource.transaction(async (manager) => {
       const note = await this.findNoteWithLead(noteId, leadId, manager);
 
       await manager.remove(LeadNote, note);
+      const oldValue = { content: note.content.slice(0, 50) };
 
       await this.leadActivityService.create(
         leadId,
         {
           action: LeadActivityAction.DELETE,
           resource: LeadActivityResource.NOTE,
-          oldValue: { content: note.content.slice(0, 50) },
+          oldValue,
           resourceId: noteId,
           description: `Remove note of lead #${leadId}`,
           performedById: currentUserId,
         },
         manager,
       );
+
+      return { oldValue };
     });
   }
 
@@ -141,29 +141,26 @@ export class LeadNoteService {
 
       const { oldValue, newValue } = buildDiff(oldNote, note);
 
-      if (!oldValue && !newValue) {
-        return note;
-      }
+      if (oldValue || newValue)
+        await this.leadActivityService.create(
+          leadId,
+          {
+            action: LeadActivityAction.UPDATE,
+            resource: LeadActivityResource.NOTE,
+            resourceId: note.id,
+            oldValue,
+            newValue,
+            description: 'Update lead note',
+            performedById: currentUserId,
+          },
+          manager,
+        );
 
-      await this.leadActivityService.create(
-        leadId,
-        {
-          action: LeadActivityAction.UPDATE,
-          resource: LeadActivityResource.NOTE,
-          resourceId: note.id,
-          oldValue,
-          newValue,
-          description: 'Update lead note',
-          performedById: currentUserId,
-        },
-        manager,
-      );
-
-      return note;
+      return { oldValue, newValue, note };
     });
   }
 
-  // LEAD ASSIGNMENTS
+  // LEAD NOTE
   async getNotesOfLead(
     leadId: number,
     paginationDto?: PaginationDto,

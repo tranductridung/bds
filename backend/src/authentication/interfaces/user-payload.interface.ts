@@ -3,4 +3,5 @@ export interface UserPayload {
   email: string;
   fullName: string;
   roles: string[];
+  isSystem: boolean;
 }

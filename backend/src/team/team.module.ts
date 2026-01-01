@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TeamService } from './team.service';
-import { TeamController } from './team.controller';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { Team } from './entities/team.entity';
-import { TeamMember } from './entities/team-members.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from '../user/user.module';
+import { TeamController } from './team.controller';
+import { TeamMember } from './entities/team-members.entity';
+import { AuditLogModule } from '../log/audit-log/audit-log.module';
 import { AuthorizationModule } from '../authorization/authorization.module';
 
 @Module({
@@ -12,6 +13,7 @@ import { AuthorizationModule } from '../authorization/authorization.module';
     TypeOrmModule.forFeature([Team, TeamMember]),
     UserModule,
     AuthorizationModule,
+    AuditLogModule,
   ],
   controllers: [TeamController],
   providers: [TeamService],

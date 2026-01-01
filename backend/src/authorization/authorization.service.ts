@@ -39,16 +39,6 @@ export class AuthorizationService {
     private dataSource: DataSource,
   ) {}
 
-  private async assertSuperadmin(userId: number) {
-    const roles = await this.getRolesOfUser(userId);
-    const isSuperadmin = roles.some(
-      (r) => r.name.toLowerCase() === 'superadmin',
-    );
-    if (!isSuperadmin) {
-      throw new ForbiddenException('Only superadmin can perform this action!');
-    }
-  }
-
   // -------------------------------- ROLES --------------------------------
   async findRole(id: number) {
     const role = await this.roleRepo.findOneBy({ id });
@@ -461,18 +451,21 @@ export class AuthorizationService {
   }
 
   // -------------------------------- USER PERMISSIONS --------------------------------
-  async checkPermissions(userId: number, permissions: string[]) {
-    const count = await this.userRoleRepo
+  async checkPermissions(
+    userId: number,
+    permissions: string[],
+  ): Promise<boolean> {
+    const result = await this.userRoleRepo
       .createQueryBuilder('userRole')
       .leftJoin('userRole.role', 'role')
       .leftJoin('role.rolePermissions', 'rolePermission')
       .leftJoin('rolePermission.permission', 'permission')
       .where('userRole.userId = :userId', { userId })
       .andWhere('permission.key IN (:...permissions)', { permissions })
-      .getCount();
+      .select('COUNT(DISTINCT permission.key)', 'cnt')
+      .getRawOne<{ cnt: number }>();
 
-    //  User must have all permissions
-    return count === permissions.length;
+    return Number(result?.cnt || 0) === permissions.length;
   }
 
   async getUserPermissions(userId: number) {

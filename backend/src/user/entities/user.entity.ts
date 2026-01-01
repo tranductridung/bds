@@ -14,6 +14,8 @@ import { LeadActivity } from '@/src/lead/activity/lead-activity.entity';
 import { LeadAssignment } from '@/src/lead/assignment/lead-assignment.entity';
 import { PropertyAgent } from '@/src/property/entities/property-agents.entity';
 import { RefreshToken } from '@/src/refresh-token/entities/refresh-token.entity';
+import { AuditLog } from '@/src/log/audit-log/entities/audit-log.entity';
+import { SystemLog } from '@/src/log/system-log/entities/system-log.entity';
 
 @Entity()
 export class User {
@@ -77,4 +79,10 @@ export class User {
 
   @OneToMany(() => LeadActivity, (la) => la.performedBy)
   leadActivities: LeadActivity[];
+
+  @OneToMany(() => AuditLog, (ad) => ad.actor)
+  auditLogs: AuditLog[];
+
+  @OneToMany(() => SystemLog, (sl) => sl.actor)
+  systemLogs: SystemLog[];
 }

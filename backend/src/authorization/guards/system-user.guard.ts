@@ -1,4 +1,3 @@
-import { DataSource } from 'typeorm';
 import {
   Injectable,
   CanActivate,
@@ -9,9 +8,10 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { UserPayload } from '@/src/authentication/interfaces/user-payload.interface';
+import { DataSource } from 'typeorm';
 import { User } from '@/src/user/entities/user.entity';
 import { UserStatus } from '@/src/user/enums/user.enum';
+import { UserPayload } from '@/src/authentication/interfaces/user-payload.interface';
 
 @Injectable()
 export class SystemUserGuard implements CanActivate {
@@ -38,6 +38,8 @@ export class SystemUserGuard implements CanActivate {
     }
 
     const isSystemUser = user.userRoles.some((ur) => ur.role.isSystem);
+    
+    console.log()
 
     if (!isSystemUser)
       throw new ForbiddenException('Only system user can access this resource');

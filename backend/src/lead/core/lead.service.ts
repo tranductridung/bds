@@ -3,6 +3,7 @@ import {
   ConflictException,
   NotFoundException,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
 import {
   LeadStatus,
@@ -14,14 +15,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserService } from '@/src/user/user.service';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
-import { buildDiff } from '../helpers/build-diff.helper';
+import { buildDiff } from '../../common/helpers/build-diff.helper';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { PaginationDto } from '@/src/common/dtos/pagination.dto';
 import { LeadActivityService } from '../activity/lead-activity.service';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
 
 @Injectable()
 export class LeadService {
   constructor(
+    @Inject(REQUEST) private readonly req: Request,
     @InjectRepository(Lead)
     private readonly leadRepo: Repository<Lead>,
     private readonly leadActivityService: LeadActivityService,
@@ -165,7 +169,7 @@ export class LeadService {
         manager,
       );
 
-      return lead;
+      return { lead, oldValue, newValue };
     });
   }
 
@@ -173,7 +177,7 @@ export class LeadService {
     currentUserId: number,
     leadId: number,
     newStatus: LeadStatus,
-  ): Promise<void> {
+  ) {
     return await this.dataSource.transaction(async (manager) => {
       const lead = await this.findOne(leadId, manager);
 
@@ -183,12 +187,14 @@ export class LeadService {
         );
       }
 
+      const oldValue = { status: lead.status };
+
       await this.leadActivityService.create(
         lead.id,
         {
           action: LeadActivityAction.UPDATE,
           resource: LeadActivityResource.LEAD,
-          oldValue: { status: lead.status },
+          oldValue,
           newValue: { status: newStatus },
           resourceId: lead.id,
           description: `Change status lead #${lead.id}`,
@@ -199,6 +205,8 @@ export class LeadService {
 
       lead.status = newStatus;
       await manager.save(Lead, lead);
+
+      return { oldValue, newValue: { status: lead.status } };
     });
   }
 }

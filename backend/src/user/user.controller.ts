@@ -22,8 +22,8 @@ import { AuthJwtGuard } from '../authentication/guards/auth.guard';
 import { ResponseService } from '../common/helpers/response.service';
 import { SuperAdminGuard } from '../authorization/guards/superadmin.guard';
 import { PermissionsGuard } from 'src/authorization/guards/permission.guard';
-import { UserPayload } from '../authentication/interfaces/user-payload.interface';
 import { RequirePermissions } from '../authentication/decorators/permissions.decorator';
+import { UserPayload } from '../authentication/interfaces/user-payload.interface';
 
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @Controller('users')
