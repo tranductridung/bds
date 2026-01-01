@@ -10,6 +10,7 @@ import { AppController } from './app.controller';
 import { FeatureModule } from './feature/feature.module';
 import { PropertyModule } from './property/property.module';
 import { RatingModule } from './property/rating/rating.module';
+import { SystemLogModule } from './log/system-log/system-log.module';
 import { RefreshTokenModule } from './refresh-token/refresh-token.module';
 import { AuthorizationModule } from './authorization/authorization.module';
 import { PropertyImageModule } from './property/image/property-image.module';
@@ -45,6 +46,7 @@ import { AuthenticationModule } from './authentication/authentication.module';
     PropertyAgentModule,
     AuthenticationModule,
     LeadModule,
+    SystemLogModule,
   ],
   controllers: [AppController],
   providers: [AppService],

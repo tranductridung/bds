@@ -14,15 +14,13 @@ import { Property } from './entities/property.entity';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { PaginationDto } from '../common/dtos/pagination.dto';
-import { PropertyAgent } from './entities/property-agents.entity';
+import { buildDiff } from '../common/helpers/build-diff.helper';
 
 @Injectable()
 export class PropertyService {
   constructor(
     @InjectRepository(Property)
     private readonly propertyRepo: Repository<Property>,
-    @InjectRepository(PropertyAgent)
-    private readonly propertyAgentRepo: Repository<PropertyAgent>,
     private readonly userService: UserService,
   ) {}
   async create(createPropertyDto: CreatePropertyDto): Promise<Property> {
@@ -95,20 +93,15 @@ export class PropertyService {
     if (!property) throw new NotFoundException('Property not found!');
   }
 
-  async update(
-    updatePropertyDto: UpdatePropertyDto,
-    propertyId: number,
-  ): Promise<Property> {
+  async update(updatePropertyDto: UpdatePropertyDto, propertyId: number) {
     const property = await this.findOne(propertyId);
+    const oldProperty = structuredClone(property);
 
-    const updatedProperty = this.propertyRepo.merge(
-      property,
-      updatePropertyDto,
-    );
+    this.propertyRepo.merge(property, updatePropertyDto);
 
     // Validate invariant trên state cuối
-    const hasLat = updatedProperty.latitude !== undefined;
-    const hasLng = updatedProperty.longitude !== undefined;
+    const hasLat = property.latitude !== undefined;
+    const hasLng = property.longitude !== undefined;
 
     if (hasLat !== hasLng) {
       throw new BadRequestException(
@@ -116,8 +109,11 @@ export class PropertyService {
       );
     }
 
-    await this.propertyRepo.save(updatedProperty);
-    return updatedProperty;
+    await this.propertyRepo.save(property);
+
+    const { oldValue, newValue } = buildDiff(oldProperty, property);
+
+    return { oldValue, newValue, property };
   }
 
   async changeSystemStatus(
@@ -125,6 +121,7 @@ export class PropertyService {
     newStatus: PropertySystemStatus,
   ) {
     const property = await this.findOne(propertyId);
+    const oldValue = { status: property.systemStatus };
 
     if (property.systemStatus === newStatus) {
       throw new BadRequestException(
@@ -140,6 +137,8 @@ export class PropertyService {
 
     property.systemStatus = newStatus;
     await this.propertyRepo.save(property);
+
+    return { oldValue, newValue: { status: newStatus } };
   }
 
   async changeBusinessStatus(
@@ -147,6 +146,8 @@ export class PropertyService {
     newStatus: PropertyBusinessStatus,
   ) {
     const property = await this.findOne(propertyId);
+
+    const oldValue = { status: property.businessStatus };
 
     if (property.businessStatus === newStatus) {
       throw new BadRequestException(
@@ -156,6 +157,8 @@ export class PropertyService {
 
     property.businessStatus = newStatus;
     await this.propertyRepo.save(property);
+
+    return { oldValue, newValue: { status: newStatus } };
   }
 
   isValidSystemStatusTransition(

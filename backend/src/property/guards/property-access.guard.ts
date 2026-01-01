@@ -1,7 +1,7 @@
 import {
+  Injectable,
   CanActivate,
   ExecutionContext,
-  Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
@@ -16,7 +16,7 @@ export class PropertyAccessGuard implements CanActivate {
     if (!req?.user) throw new UnauthorizedException();
 
     await this.accessService.assertCanAccessProperty(
-      req.user.id,
+      req.user,
       Number(req.params.propertyId),
     );
     return true;

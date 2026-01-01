@@ -11,26 +11,38 @@ import {
   Controller,
   ParseIntPipe,
   ParseEnumPipe,
+  UseInterceptors,
   BadRequestException,
 } from '@nestjs/common';
+import {
+  AuditLogAction,
+  AuditLogTargetType,
+} from '../log/enums/audit-log.enum';
 import { Request } from 'express';
 import { TeamService } from './team.service';
 import { MemberRole } from './enums/member-role.enum';
 import { UpdateTeamDto } from './dto/update-team.dto';
 import { CreateTeamDto } from './dto/create-team.dto';
+import { AuditLog } from '../log/decorators/audit.decorator';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { AuthJwtGuard } from '../authentication/guards/auth.guard';
 import { ResponseService } from '../common/helpers/response.service';
 import { PermissionsGuard } from 'src/authorization/guards/permission.guard';
+import { AuditInterceptor } from '../log/audit-log/interceptors/audit-log.interceptor';
 import { RequirePermissions } from '../authentication/decorators/permissions.decorator';
 
 @UseGuards(AuthJwtGuard, PermissionsGuard)
+@UseInterceptors(AuditInterceptor)
 @Controller('teams')
 export class TeamController {
   constructor(private readonly teamService: TeamService) {}
 
   @RequirePermissions('team:create')
   @Post()
+  @AuditLog({
+    action: AuditLogAction.CREATE,
+    targetType: AuditLogTargetType.TEAM,
+  })
   async create(@Req() req: Request, @Body() createTeamDto: CreateTeamDto) {
     const team = await this.teamService.create(
       createTeamDto,
@@ -55,6 +67,10 @@ export class TeamController {
 
   @RequirePermissions('team:update')
   @Patch(':teamId')
+  @AuditLog({
+    action: AuditLogAction.UPDATE,
+    targetType: AuditLogTargetType.TEAM,
+  })
   async update(
     @Req() req: Request,
     @Body() updateTeamDto: UpdateTeamDto,
@@ -70,6 +86,10 @@ export class TeamController {
 
   @RequirePermissions('team:delete')
   @Delete(':teamId')
+  @AuditLog({
+    action: AuditLogAction.DELETE,
+    targetType: AuditLogTargetType.TEAM,
+  })
   async remove(
     @Req() req: Request,
     @Param('teamId', ParseIntPipe) teamId: number,
@@ -77,10 +97,19 @@ export class TeamController {
     await this.teamService.remove(teamId, Number(req?.user?.id));
     return ResponseService.format({ message: 'Remove team successfully!' });
   }
+}
 
-  // TEAM MEMBER
+@UseGuards(AuthJwtGuard, PermissionsGuard)
+@UseInterceptors(AuditInterceptor)
+@Controller('teams/:teamId/members')
+export class TeamMemberController {
+  constructor(private readonly teamService: TeamService) {}
   @RequirePermissions('team:member:create')
-  @Post(':teamId/members')
+  @Post()
+  @AuditLog({
+    action: AuditLogAction.CREATE,
+    targetType: AuditLogTargetType.TEAM_MEMBER,
+  })
   async addMemberToTeam(
     @Req() req: Request,
     @Param('teamId', ParseIntPipe) teamId: number,
@@ -95,14 +124,18 @@ export class TeamController {
   }
 
   @RequirePermissions('team:member:read')
-  @Get(':teamId/members')
+  @Get()
   async getMembersOfTeam(@Param('teamId', ParseIntPipe) teamId: number) {
     const members = await this.teamService.getMembersOfTeam(teamId);
     return ResponseService.format(members);
   }
 
   @RequirePermissions('team:member:delete')
-  @Delete(':teamId/members/:memberId')
+  @Delete(':memberId')
+  @AuditLog({
+    action: AuditLogAction.DELETE,
+    targetType: AuditLogTargetType.TEAM_MEMBER,
+  })
   async removeMemberFromTeam(
     @Req() req: Request,
     @Param('teamId', ParseIntPipe) teamId: number,
@@ -123,7 +156,11 @@ export class TeamController {
   }
 
   @RequirePermissions('team:member:update')
-  @Patch(':teamId/members/:memberId/role')
+  @Patch(':memberId/role')
+  @AuditLog({
+    action: AuditLogAction.CREATE,
+    targetType: AuditLogTargetType.TEAM_MEMBER,
+  })
   async assignRoleForMember(
     @Req() req: Request,
     @Param('teamId', ParseIntPipe) teamId: number,

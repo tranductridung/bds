@@ -31,6 +31,9 @@ export class PermissionSeed {
       'lead:assignment',
       'lead:note',
       'lead:activity',
+
+      'log:audit',
+      'log:system',
     ];
 
     // Get current permission in DB

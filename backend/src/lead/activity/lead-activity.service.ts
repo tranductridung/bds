@@ -1,14 +1,14 @@
-import { EntityManager, Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { LeadActivity } from './lead-activity.entity';
 import {
-  BadRequestException,
   Injectable,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EntityManager, Repository } from 'typeorm';
+import { LeadActivity } from './lead-activity.entity';
+import { LeadActivityAction } from '../enums/lead.enum';
 import { PaginationDto } from '@/src/common/dtos/pagination.dto';
 import { CreateLeadActivityDto } from './dto/create-lead-activity.dto';
-import { LeadActivityAction } from '../enums/lead.enum';
 
 @Injectable()
 export class LeadActivityService {
@@ -80,7 +80,7 @@ export class LeadActivityService {
       relations: ['lead', 'performedBy'],
     });
 
-    if (!activity) throw new NotFoundException('Lead activity not found');
+    if (!activity) throw new NotFoundException('Activity not found');
 
     return activity;
   }

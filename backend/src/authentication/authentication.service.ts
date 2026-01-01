@@ -15,9 +15,9 @@ import { User } from 'src/user/entities/user.entity';
 import { UserStatus } from '../user/enums/user.enum';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SetupPasswordDto } from './dto/setup-password.dto';
-import { UserPayload } from './interfaces/user-payload.interface';
 import { RefreshTokenService } from '../refresh-token/refresh-token.service';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { UserPayload } from './interfaces/user-payload.interface';
 
 @Injectable()
 export class AuthenticationService {
@@ -44,7 +44,7 @@ export class AuthenticationService {
       expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRES'),
     });
 
-    await this.refreshTokenService.create(refreshToken, payload.id);
+    await this.refreshTokenService.create(refreshToken, payload.sub);
 
     return { accessToken, refreshToken, user: payload };
   }
@@ -80,10 +80,10 @@ export class AuthenticationService {
         throw new ForbiddenException('Account is banned!');
     }
     return {
-      id: user.id,
-      email: user.email,
-      fullName: user.fullName,
-      roles: user.roles,
+      sub: user.id,
+      // email: user.email,
+      // fullName: user.fullName,
+      // roles: user.roles,
     };
   }
 

@@ -1,29 +1,32 @@
-import { Repository } from 'typeorm';
-import { UserService } from '../user/user.service';
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { DataSource } from 'typeorm';
+import { Property } from './entities/property.entity';
 import { PropertyAgent } from './entities/property-agents.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-
+import { UserPayload } from '../authentication/interfaces/user-payload.interface';
 @Injectable()
 export class PropertyAccessService {
-  constructor(
-    private readonly userService: UserService,
-    @InjectRepository(PropertyAgent)
-    private readonly propertyAgentRepo: Repository<PropertyAgent>,
-  ) {}
+  constructor(private readonly dataSource: DataSource) {}
 
-  async assertCanAccessProperty(userId: number, propertyId: number) {
-    const isSystem = await this.userService.isSystemUser(userId);
-    if (isSystem) return;
+  async assertCanAccessProperty(user: UserPayload, propertyId: number) {
+    const isPropertyExist = await this.dataSource
+      .getRepository(Property)
+      .exists({ where: { id: propertyId } });
 
-    const isAgent = await this.propertyAgentRepo.exists({
+    if (!isPropertyExist) throw new NotFoundException('Property not found');
+
+    if (user.isSystem) return;
+
+    const isAgent = await this.dataSource.getRepository(PropertyAgent).exists({
       where: {
         property: { id: propertyId },
-        agent: { id: userId },
+        agent: { id: user.id },
       },
     });
 
-    if (!isAgent)
-      throw new ForbiddenException('You are not assigned to this property');
+    if (!isAgent) throw new ForbiddenException();
   }
 }

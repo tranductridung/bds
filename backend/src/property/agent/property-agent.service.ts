@@ -6,7 +6,6 @@ import {
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserService } from 'src/user/user.service';
-import { Property } from '../entities/property.entity';
 import { PaginationDto } from '@/src/common/dtos/pagination.dto';
 import { PropertyAgent } from '../entities/property-agents.entity';
 
@@ -18,14 +17,14 @@ export class PropertyAgentService {
     private readonly userService: UserService,
   ) {}
 
-  async addAgentToProperty(property: Property, agentId: number) {
+  async addAgentToProperty(propertyId: number, agentId: number) {
     // Check if property and agent is exist
     const agent = await this.userService.findOne(agentId, true);
 
     // Check if agent is exist in property
     const propertyAgentExist = await this.propertyAgentRepo.findOne({
       where: {
-        property: { id: property.id },
+        property: { id: propertyId },
         agent: { id: agentId },
       },
     });
@@ -35,7 +34,7 @@ export class PropertyAgentService {
 
     const propertyAgent = this.propertyAgentRepo.create({
       agent,
-      property,
+      property: { id: propertyId },
     });
 
     await this.propertyAgentRepo.save(propertyAgent);
@@ -65,7 +64,6 @@ export class PropertyAgentService {
   }
 
   async removeAgentOfProperty(propertyId: number, agentId: number) {
-    // Check if agent is exist
     await this.userService.findOne(agentId, true);
 
     // Check if agent is exist in property
@@ -80,5 +78,7 @@ export class PropertyAgentService {
       throw new NotFoundException('Agent not belong to this property');
 
     await this.propertyAgentRepo.remove(propertyAgent);
+
+    return propertyAgent;
   }
 }

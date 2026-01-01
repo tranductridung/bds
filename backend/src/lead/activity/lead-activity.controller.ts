@@ -6,8 +6,8 @@ import {
   Controller,
   ParseIntPipe,
 } from '@nestjs/common';
-import { LeadActivityService } from './lead-activity.service';
 import { LeadAccessGuard } from '../guards/lead.guard';
+import { LeadActivityService } from './lead-activity.service';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { AuthJwtGuard } from '../../authentication/guards/auth.guard';
 import { ResponseService } from '@/src/common/helpers/response.service';
@@ -17,7 +17,7 @@ import { RequirePermissions } from '../../authentication/decorators/permissions.
 
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @Controller('activities')
-export class LeadActivityController {
+export class ActivityController {
   constructor(private readonly leadActivityService: LeadActivityService) {}
 
   @RequirePermissions('lead:activity:read')
@@ -35,5 +35,23 @@ export class LeadActivityController {
   async findOne(@Param('activityId', ParseIntPipe) activityId: number) {
     const activity = await this.leadActivityService.findOne(activityId);
     return ResponseService.format(activity);
+  }
+}
+
+@UseGuards(AuthJwtGuard, PermissionsGuard)
+@Controller('leads/:leadId/activities')
+export class LeadActivityController {
+  constructor(private leadActivityService: LeadActivityService) {}
+
+  @RequirePermissions('lead:activity:read')
+  @UseGuards(LeadAccessGuard)
+  @Get()
+  async findAllActivitysOfLead(
+    @Param('leadId', ParseIntPipe) leadId: number,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    const { activities, total } =
+      await this.leadActivityService.getActivitysOfLead(leadId, paginationDto);
+    return ResponseService.format(activities, { total });
   }
 }

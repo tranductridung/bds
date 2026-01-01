@@ -1,29 +1,33 @@
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { UserService } from '../../user/user.service';
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { Lead } from './lead.entity';
+import { DataSource } from 'typeorm';
 import { LeadAssignment } from '../assignment/lead-assignment.entity';
-
+import { UserPayload } from '@/src/authentication/interfaces/user-payload.interface';
 @Injectable()
 export class LeadAccessService {
-  constructor(
-    private readonly userService: UserService,
-    @InjectRepository(LeadAssignment)
-    private readonly leadAssignmentRepo: Repository<LeadAssignment>,
-  ) {}
+  constructor(private readonly dataSource: DataSource) {}
 
-  async assertCanAccessLead(userId: number, leadId: number) {
-    const isSystem = await this.userService.isSystemUser(userId);
-    if (isSystem) return;
+  async assertCanAccessLead(user: UserPayload, leadId: number) {
+    const isLeadExist = await this.dataSource
+      .getRepository(Lead)
+      .exists({ where: { id: leadId } });
 
-    const isAssignment = await this.leadAssignmentRepo.exists({
+    if (!isLeadExist) {
+      throw new NotFoundException('Lead not found');
+    }
+
+    if (user.isSystem) return;
+    const isAgent = await this.dataSource.getRepository(LeadAssignment).exists({
       where: {
+        agent: { id: user.id },
         lead: { id: leadId },
-        agent: { id: userId },
       },
     });
 
-    if (!isAssignment)
-      throw new ForbiddenException('You are not assigned to this lead');
+    if (!isAgent) throw new ForbiddenException();
   }
 }

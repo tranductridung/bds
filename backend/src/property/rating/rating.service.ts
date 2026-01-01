@@ -8,10 +8,10 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Rating } from '../entities/ratings.entity';
 import { PropertyService } from '../property.service';
-import { Property } from '../entities/property.entity';
 import { PaginationDto } from '../../common/dtos/pagination.dto';
 import { UpdateRatingDto } from '../dto/rating/update-rating.dto';
 import { CreateRatingDto } from '../dto/rating/create-rating.dto';
+import { buildDiff } from '@/src/common/helpers/build-diff.helper';
 
 @Injectable()
 export class RatingService {
@@ -23,12 +23,12 @@ export class RatingService {
   ) {}
 
   async create(
-    property: Property,
+    propertyId: number,
     createRatingDto: CreateRatingDto,
   ): Promise<Rating> {
     const rating = this.ratingRepo.create({
       ...createRatingDto,
-      property,
+      property: { id: propertyId },
     });
 
     await this.ratingRepo.save(rating);
@@ -68,31 +68,42 @@ export class RatingService {
   }
 
   async update(
+    propertyId: number,
     ratingId: number,
     updateRatingDto: UpdateRatingDto,
-  ): Promise<Rating> {
+  ) {
     const rating = await this.ratingRepo.findOne({
-      where: { id: ratingId },
+      where: { id: ratingId, property: { id: propertyId } },
       relations: ['property'],
     });
 
     if (!rating) throw new NotFoundException('Rating not found!');
 
-    const updatedRating = this.ratingRepo.merge(rating, updateRatingDto);
+    const oldRating = structuredClone(rating);
 
-    await this.ratingRepo.save(updatedRating);
+    this.ratingRepo.merge(rating, updateRatingDto);
 
-    return updatedRating;
+    await this.ratingRepo.save(rating);
+
+    const { oldValue, newValue } = buildDiff(oldRating, rating);
+
+    return { oldValue, newValue, rating };
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(propertyId: number, ratingId: number) {
     const rating = await this.ratingRepo.findOne({
-      where: { id },
+      where: { id: ratingId, property: { id: propertyId } },
     });
 
     if (!rating) throw new NotFoundException('Rating not found!');
 
     await this.ratingRepo.remove(rating);
+
+    const oldValue = {
+      rating: rating.rating,
+      comment: rating.comment?.slice(0, 50),
+    };
+    return { oldValue };
   }
 
   // PROPERTY RATING
