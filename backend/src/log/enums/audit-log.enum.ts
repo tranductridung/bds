@@ -1,35 +1,37 @@
 export enum AuditLogAction {
-  CREATE = 'Create',
-  UPDATE = 'Update',
-  DELETE = 'Delete',
-  LOGIN = 'Login',
-  LOGOUT = 'Logout',
-  OTHER = 'Other',
+  CREATE = 'CREATE',
+  UPDATE = 'UPDATE',
+  DELETE = 'DELETE',
+  LOGIN = 'LOGIN',
+  LOGOUT = 'LOGOUT',
+  OTHER = 'OTHER',
 }
 
 export enum SystemLogAction {
-  CREATE = 'Create',
-  UPDATE = 'Update',
-  DELETE = 'Delete',
-  LOGIN = 'Login',
-  LOGOUT = 'Logout',
-  OTHER = 'Other',
+  CREATE = 'CREATE',
+  UPDATE = 'UPDATE',
+  DELETE = 'DELETE',
+  LOGIN = 'LOGIN',
+  LOGOUT = 'LOGOUT',
+  OTHER = 'OTHER',
 }
 
 export enum AuditLogTargetType {
-  FEATURE = 'feature',
+  FEATURE = 'FEATURE',
 
-  PROPERTY = 'property',
-  PROPERTY_FEATURE = 'property feature',
-  PROPERTY_AGENT = 'property agent',
-  PROPERTY_IMAGE = 'property image',
-  PROPERTY_RATING = 'property rating',
+  PROPERTY = 'PROPERTY',
+  PROPERTY_FEATURE = 'PROPERTY FEATURE',
+  PROPERTY_AGENT = 'PROPERTY AGENT',
+  PROPERTY_IMAGE = 'PROPERTY IMAGE',
+  PROPERTY_RATING = 'PROPERTY RATING',
 
-  LEAD = 'lead',
-  LEAD_ASSIGNMENT = 'lead assignment',
-  LEAD_NOTE = 'lead note',
-  LEAD_ACTIVITY = 'lead activity',
+  LEAD = 'LEAD',
+  LEAD_ASSIGNMENT = 'LEAD ASSIGNMENT',
+  LEAD_NOTE = 'LEAD NOTE',
+  LEAD_ACTIVITY = 'LEAD ACTIVITY',
 
-  TEAM = 'team',
-  TEAM_MEMBER = 'team member',
+  TEAM = 'TEAM',
+  TEAM_MEMBER = 'TEAM MEMBER',
+
+  NOTIFICATION = 'NOTIFICATION',
 }

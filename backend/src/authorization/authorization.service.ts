@@ -11,14 +11,16 @@ import { Role } from './entities/role.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UserRole } from './entities/user-role.entity';
 import { CreateRoleDto } from './dtos/create-role.dto';
 import { UpdateRoleDto } from './dtos/update-role.dto';
 import { Permission } from './entities/permission.entity';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
-import { RolePermission } from './entities/role-permission.entity';
+import { AlertEvents } from '../notification/events/alert.events';
 import { CreatePermissionDto } from './dtos/create-permission.dto';
 import { UpdatePermissionDto } from './dtos/update-permission.dto';
+import { RolePermission } from './entities/role-permission.entity';
 import { DataSource, EntityManager, In, Repository } from 'typeorm';
 import { Level } from './enums/authorization.enum';
 
@@ -37,6 +39,7 @@ export class AuthorizationService {
     @InjectRepository(RolePermission)
     private readonly rolePermisisonRepo: Repository<RolePermission>,
     private dataSource: DataSource,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   // -------------------------------- ROLES --------------------------------
@@ -232,104 +235,41 @@ export class AuthorizationService {
   }
 
   // -------------------------------- USER ROLES --------------------------------
-  // Just use in system allow user have more role
-  // async assignRoleToUser(userId: number, roleId: number) {
-  //   const hasRole = await this.checkUserRoleExist(userId, roleId);
-  //   if (hasRole) throw new BadRequestException(`User already has role!`);
-
-  //   const role = await this.roleRepo.findOne({
-  //     where: { id: roleId },
-  //     select: { id: true },
-  //   });
-
-  //   if (!role) throw new NotFoundException('Role not found');
-
-  //   const userRole = this.userRoleRepo.create({
-  //     user: { id: userId },
-  //     role: { id: role.id },
-  //   });
-
-  //   await this.userRoleRepo.save(userRole);
-  //   return role.id;
-  // }
-
-  // async assignRoleToUser(
-  //   userId: number,
-  //   roleId: number,
-  //   manager?: EntityManager,
-  // ) {
-  //   const roleRepo = manager ? manager.getRepository(Role) : this.roleRepo;
-  //   const userRoleRepo = manager
-  //     ? manager.getRepository(UserRole)
-  //     : this.userRoleRepo;
-  //   const userRepo = manager ? manager.getRepository(User) : this.userRepo;
-
-  //   const user = await userRepo.findOne({ where: { id: userId } });
-  //   if (!user) throw new NotFoundException('User not found!');
-
-  //   if (user.status === UserStatus.UNVERIFIED)
-  //     throw new BadRequestException(
-  //       `User with status ${user.status} cannot be assigned a role yet.`,
-  //     );
-
-  //   const role = await roleRepo.findOne({
-  //     where: { id: roleId },
-  //     select: { id: true, name: true },
-  //   });
-
-  //   if (!role) throw new NotFoundException('Role not found');
-
-  //   if (role.name === 'superadmin') {
-  //     const count = await userRoleRepo.count({
-  //       where: {
-  //         role,
-  //       },
-  //     });
-
-  //     if (count >= 1)
-  //       throw new BadRequestException(
-  //         'Cannot create more than one SuperAdmin user!',
-  //       );
-  //   }
-
-  //   // Find exist userRole
-  //   const existingUserRole = await userRoleRepo.findOne({
-  //     where: { user: { id: userId } },
-  //     relations: ['role'],
-  //   });
-
-  //   if (existingUserRole) {
-  //     // Update role
-  //     existingUserRole.role = role;
-  //     await userRoleRepo.save(existingUserRole);
-  //   } else {
-  //     // Create role
-  //     const newUserRole = userRoleRepo.create({
-  //       user: { id: userId },
-  //       role: { id: role.id },
-  //     });
-
-  //     await userRoleRepo.save(newUserRole);
-  //   }
-
-  //   return { userId, roleId: role.id };
-  // }
-
   // Check lại, chỉ superadmin mới có quyền
   async removeUserRole(currentUserId: number, userId: number, roleId: number) {
-    if (currentUserId === userId)
-      throw new BadRequestException('You cannot remove your role');
+    if (currentUserId === userId) {
+      throw new BadRequestException('You cannot remove your own role');
+    }
 
     const role = await this.roleRepo.findOne({
       where: { id: roleId },
-      select: { id: true },
+      select: { id: true, name: true },
     });
 
-    if (!role) throw new NotFoundException('Role not found!');
+    if (!role) {
+      throw new NotFoundException('Role not found');
+    }
+
+    const userRole = await this.userRoleRepo.findOne({
+      where: {
+        user: { id: userId },
+        role: { id: roleId },
+      },
+    });
+
+    if (!userRole) {
+      throw new BadRequestException('User does not have this role');
+    }
 
     await this.userRoleRepo.delete({
       user: { id: userId },
-      role: { id: role.id },
+      role: { id: roleId },
+    });
+
+    this.eventEmitter.emit(AlertEvents.AUTHOR_ROLE_REMOVED, {
+      receiverIds: [userId],
+      actorId: currentUserId,
+      oldRole: role.name,
     });
   }
 
@@ -340,20 +280,6 @@ export class AuthorizationService {
         role: { id: roleId },
       },
     });
-  }
-
-  async removeRoleFromUser(userId: number, roleId: number) {
-    const hasRole = await this.checkUserRoleExist(userId, roleId);
-    if (!hasRole) throw new BadRequestException(`User does not have role!`);
-
-    const role = await this.findRole(roleId);
-
-    await this.userRoleRepo.delete({
-      user: { id: userId },
-      role,
-    });
-
-    return { message: `Removed role success!` };
   }
 
   async getRolesOfUser(userId: number) {
@@ -490,6 +416,7 @@ export class AuthorizationService {
   async assignRoleToUser(
     userId: number,
     roleId: number,
+    currentUserId?: number,
     manager?: EntityManager,
   ) {
     const roleRepo = manager ? manager.getRepository(Role) : this.roleRepo;
@@ -539,6 +466,12 @@ export class AuthorizationService {
     });
 
     await userRoleRepo.save(newUserRole);
+
+    this.eventEmitter.emit(AlertEvents.AUTHOR_ROLE_ASSIGNED, {
+      receiverIds: [userId],
+      actorId: currentUserId,
+      newRole: newUserRole.role.name,
+    });
 
     return newUserRole;
   }

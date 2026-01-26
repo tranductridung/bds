@@ -8,14 +8,16 @@ import {
 } from 'typeorm';
 import { IsEnum } from 'class-validator';
 import { UserStatus, Gender } from '../enums/user.enum';
+import { Reminder } from '@/src/reminder/entities/reminder.entity';
 import { TeamMember } from '@/src/team/entities/team-members.entity';
 import { UserRole } from 'src/authorization/entities/user-role.entity';
 import { LeadActivity } from '@/src/lead/activity/lead-activity.entity';
+import { AuditLog } from '@/src/log/audit-log/entities/audit-log.entity';
+import { SystemLog } from '@/src/log/system-log/entities/system-log.entity';
 import { LeadAssignment } from '@/src/lead/assignment/lead-assignment.entity';
 import { PropertyAgent } from '@/src/property/entities/property-agents.entity';
 import { RefreshToken } from '@/src/refresh-token/entities/refresh-token.entity';
-import { AuditLog } from '@/src/log/audit-log/entities/audit-log.entity';
-import { SystemLog } from '@/src/log/system-log/entities/system-log.entity';
+import { NotificationReceiver } from '@/src/notification/entities/notifications_receivers.entity';
 
 @Entity()
 export class User {
@@ -28,33 +30,33 @@ export class User {
   @Column()
   fullName: string;
 
-  @Column({ nullable: true })
-  phoneNumber?: string;
+  @Column({ type: 'varchar', nullable: true })
+  phoneNumber: string | null;
 
-  @Column({ nullable: true })
-  address?: string;
+  @Column({ type: 'varchar', nullable: true })
+  address: string | null;
 
   @Column({ type: 'enum', enum: UserStatus, default: UserStatus.UNVERIFIED })
   @IsEnum(UserStatus)
   status: UserStatus;
 
-  @Column({ select: false, nullable: true })
-  password?: string;
+  @Column({ type: 'varchar', select: false, nullable: true })
+  password: string | null;
 
   @Column({ type: 'enum', enum: Gender, default: Gender.UNDEFINED })
   gender: Gender;
 
-  @Column({ nullable: true })
-  dob: Date;
+  @Column({ type: 'date', nullable: true })
+  dob: Date | null;
 
-  @Column({ nullable: true })
-  avatarUrl: string;
+  @Column({ type: 'varchar', nullable: true })
+  avatarUrl: string | null;
 
-  @Column({ nullable: true })
-  lastLoginAt: Date;
+  @Column({ type: 'date', nullable: true })
+  lastLoginAt: Date | null;
 
-  @Column({ nullable: true })
-  lastLoginIp: string;
+  @Column({ type: 'varchar', nullable: true })
+  lastLoginIp: string | null;
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
@@ -85,4 +87,13 @@ export class User {
 
   @OneToMany(() => SystemLog, (sl) => sl.actor)
   systemLogs: SystemLog[];
+
+  @OneToMany(() => NotificationReceiver, (un) => un.receiver)
+  notificationReceivers: NotificationReceiver[];
+
+  @OneToMany(() => Reminder, (reminder) => reminder.creator)
+  createdReminders: Reminder[];
+
+  @OneToMany(() => Reminder, (reminder) => reminder.assignee)
+  assignedReminders: Reminder[];
 }

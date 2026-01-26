@@ -20,7 +20,7 @@ export class Rating {
   rating: number;
 
   @Column({ type: 'text', nullable: true })
-  comment?: string;
+  comment: string | null;
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
@@ -33,4 +33,7 @@ export class Rating {
   })
   @JoinColumn({ name: 'propertyId' })
   property: Property;
+
+  @Column()
+  propertyId: number;
 }

@@ -35,4 +35,10 @@ export class LeadAssignment {
   })
   @JoinColumn({ name: 'agentId' })
   agent: User;
+
+  @Column()
+  leadId: number;
+
+  @Column()
+  agentId: number;
 }

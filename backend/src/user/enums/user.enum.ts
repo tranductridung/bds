@@ -1,12 +1,12 @@
 export enum Gender {
-  UNDEFINED = 'Undefined',
-  MALE = 'Male',
-  FEMALE = 'Female',
+  UNDEFINED = 'UNDEFINED',
+  MALE = 'MALE',
+  FEMALE = 'FEMALE',
 }
 
 export enum UserStatus {
-  ACTIVE = 'Active',
-  INACTIVE = 'Inactive',
-  UNVERIFIED = 'Unverified',
-  BANNED = 'Banned',
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  UNVERIFIED = 'UNVERIFIED',
+  BANNED = 'BANNED',
 }

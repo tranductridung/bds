@@ -38,8 +38,6 @@ export class SystemUserGuard implements CanActivate {
     }
 
     const isSystemUser = user.userRoles.some((ur) => ur.role.isSystem);
-    
-    console.log()
 
     if (!isSystemUser)
       throw new ForbiddenException('Only system user can access this resource');

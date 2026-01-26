@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppService } from './app.service';
+import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule } from '@nestjs/config';
 import { TeamModule } from './team/team.module';
 import { MailModule } from './mail/mail.module';
@@ -8,9 +9,12 @@ import { LeadModule } from './lead/lead.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { FeatureModule } from './feature/feature.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ReminderModule } from './reminder/reminder.module';
 import { PropertyModule } from './property/property.module';
 import { RatingModule } from './property/rating/rating.module';
 import { SystemLogModule } from './log/system-log/system-log.module';
+import { NotificationModule } from './notification/notification.module';
 import { RefreshTokenModule } from './refresh-token/refresh-token.module';
 import { AuthorizationModule } from './authorization/authorization.module';
 import { PropertyImageModule } from './property/image/property-image.module';
@@ -32,6 +36,22 @@ import { AuthenticationModule } from './authentication/authentication.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
+    EventEmitterModule.forRoot({
+      wildcard: false,
+      delimiter: '.',
+      newListener: false,
+      removeListener: false,
+      maxListeners: 10,
+      verboseMemoryLeak: false,
+      ignoreErrors: false,
+    }),
+    BullModule.forRoot({
+      connection: {
+        host: 'localhost',
+        port: 6379,
+      },
+    }),
+
     UserModule,
     MailModule,
     TeamModule,
@@ -47,6 +67,8 @@ import { AuthenticationModule } from './authentication/authentication.module';
     AuthenticationModule,
     LeadModule,
     SystemLogModule,
+    NotificationModule,
+    ReminderModule,
   ],
   controllers: [AppController],
   providers: [AppService],

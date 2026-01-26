@@ -3,7 +3,6 @@ import {
   ConflictException,
   NotFoundException,
   BadRequestException,
-  Inject,
 } from '@nestjs/common';
 import {
   LeadStatus,
@@ -11,29 +10,30 @@ import {
   LeadActivityResource,
 } from '../enums/lead.enum';
 import { Lead } from './lead.entity';
+import { LeadEvents } from '../events/lead.event';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserService } from '@/src/user/user.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
-import { buildDiff } from '../../common/helpers/build-diff.helper';
+import { UserService } from '@/src/user/user.service';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { PaginationDto } from '@/src/common/dtos/pagination.dto';
+import { buildDiff } from '../../common/helpers/build-diff.helper';
+import { LeadAssignment } from '../assignment/lead-assignment.entity';
 import { LeadActivityService } from '../activity/lead-activity.service';
-import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
 
 @Injectable()
 export class LeadService {
   constructor(
-    @Inject(REQUEST) private readonly req: Request,
     @InjectRepository(Lead)
     private readonly leadRepo: Repository<Lead>,
     private readonly leadActivityService: LeadActivityService,
     private readonly dataSource: DataSource,
     private readonly userService: UserService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  validateBudget(budgetMin?: number, budgetMax?: number): void {
+  validateBudget(budgetMin: number | null, budgetMax: number | null): void {
     if (budgetMin && budgetMax) {
       if (budgetMax <= budgetMin) {
         throw new BadRequestException(
@@ -206,7 +206,24 @@ export class LeadService {
       lead.status = newStatus;
       await manager.save(Lead, lead);
 
-      return { oldValue, newValue: { status: lead.status } };
+      const newValue = { status: lead.status };
+
+      const rows = await this.dataSource
+        .createQueryBuilder(LeadAssignment, 'la')
+        .select('la.agentId', 'agentId')
+        .where('la.leadId = :leadId', { leadId })
+        .getRawMany<{ agentId: number }>();
+
+      const receiverIds = rows.map((r) => r.agentId);
+
+      this.eventEmitter.emit(LeadEvents.STATUS_CHANGED, {
+        leadId: lead.id,
+        receiverIds,
+        actorId: currentUserId,
+        oldValue,
+        newValue,
+      });
+      return { oldValue, newValue };
     });
   }
 }

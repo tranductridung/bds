@@ -21,12 +21,12 @@ import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { AuditLog } from '@/src/log/decorators/audit.decorator';
 import { LeadAssignmentService } from './lead-assignment.service';
 import { AuthJwtGuard } from '../../authentication/guards/auth.guard';
+import { LeadSystemUserGuard } from '../guards/lead-system-user.guard';
 import { ResponseService } from '@/src/common/helpers/response.service';
 import { PermissionsGuard } from 'src/authorization/guards/permission.guard';
 import { SystemUserGuard } from '@/src/authorization/guards/system-user.guard';
 import { RequirePermissions } from '../../authentication/decorators/permissions.decorator';
 import { AuditInterceptor } from '@/src/log/audit-log/interceptors/audit-log.interceptor';
-import { LeadSystemUserGuard } from '../guards/lead-system-user.guard';
 
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @Controller('assignments')
@@ -120,7 +120,7 @@ export class LeadAssignmentController {
     req.auditPayload = {
       targetId: assignmentId,
       oldValue,
-      description: `Remove assignment of lead #${leadId}}`,
+      description: `Remove assignment of lead #${leadId}`,
     };
 
     return ResponseService.format({

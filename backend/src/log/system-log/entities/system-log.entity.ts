@@ -20,19 +20,22 @@ export class SystemLog {
   @Column()
   event: string;
 
-  @Column({ nullable: true })
-  path?: string;
+  @Column({ type: 'varchar', nullable: true })
+  path: string | null;
 
-  @Column({ nullable: true })
-  method?: string;
+  @Column({ type: 'varchar', nullable: true })
+  method: string | null;
 
   @Column({ type: 'json', nullable: true })
-  meta?: Record<string, any>;
+  meta: Record<string, any> | null;
 
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @ManyToOne(() => User, { nullable: true, onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'actorId' })
-  actor?: User;
+  actor: User | null;
+
+  @Column()
+  actorId: number;
 }

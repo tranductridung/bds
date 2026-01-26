@@ -3,8 +3,10 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { LeadEvents } from '../events/lead.event';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserService } from '@/src/user/user.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { LeadAssignment } from './lead-assignment.entity';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { PaginationDto } from '@/src/common/dtos/pagination.dto';
@@ -19,6 +21,7 @@ export class LeadAssignmentService {
     private readonly leadActivityService: LeadActivityService,
     private readonly dataSource: DataSource,
     private readonly userService: UserService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async changePrimaryAgent(
@@ -79,6 +82,13 @@ export class LeadAssignmentService {
         manager,
       );
 
+      this.eventEmitter.emit(LeadEvents.PRIMARY_AGENT_CHANGED, {
+        leadId: assignment.leadId,
+        receiverIds: [oldPrimaryAssignment?.agent.id, agentId],
+        actorId: currentUserId,
+        newValue,
+      });
+
       return { oldValue, newValue };
     });
   }
@@ -134,6 +144,13 @@ export class LeadAssignmentService {
         },
         manager,
       );
+
+      this.eventEmitter.emit(LeadEvents.ASSIGNED, {
+        leadId: assignment.leadId,
+        receiverIds: [agentId],
+        actorId: currentUserId,
+        newValue,
+      });
 
       return { assignment, newValue };
     });
@@ -222,6 +239,13 @@ export class LeadAssignmentService {
         },
         manager,
       );
+
+      this.eventEmitter.emit(LeadEvents.UNASSIGNED, {
+        leadId: assignment.leadId,
+        receiverIds: [assignment.agentId],
+        actorId: currentUserId,
+        oldValue,
+      });
 
       return { oldValue };
     });

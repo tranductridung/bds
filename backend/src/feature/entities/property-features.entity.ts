@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Column,
 } from 'typeorm';
 import { Feature } from './feature.entity';
 import { Property } from '../../property/entities/property.entity';
@@ -21,6 +22,12 @@ export class PropertyFeature {
 
   @UpdateDateColumn({ select: false })
   updatedAt: Date;
+
+  @Column()
+  featureId: number;
+
+  @Column()
+  propertyId: number;
 
   @ManyToOne(() => Feature, (feature) => feature.propertiesFeatures, {
     onDelete: 'RESTRICT',

@@ -43,4 +43,7 @@ export class PropertyImage {
   })
   @JoinColumn({ name: 'propertyId' })
   property: Property;
+
+  @Column()
+  propertyId: number;
 }

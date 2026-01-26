@@ -54,7 +54,7 @@ export class AuthenticationService {
       secret: this.configService.get('REFRESH_TOKEN'),
     });
 
-    return await this.refreshTokenService.removeToken(
+    return await this.refreshTokenService.revokeToken(
       refreshToken,
       userPayload.id,
     );

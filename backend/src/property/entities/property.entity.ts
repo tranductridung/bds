@@ -30,7 +30,7 @@ export class Property {
     transformer: new ColumnNumericTransformer(),
     nullable: true,
   })
-  price: number;
+  price: number | null;
 
   @Column()
   type: string;
@@ -41,7 +41,7 @@ export class Property {
     transformer: new ColumnNumericTransformer(),
     nullable: true,
   })
-  latitude: number;
+  latitude: number | null;
 
   @Column('decimal', {
     precision: 10,
@@ -49,10 +49,10 @@ export class Property {
     transformer: new ColumnNumericTransformer(),
     nullable: true,
   })
-  longitude: number;
+  longitude: number | null;
 
-  @Column({ nullable: true })
-  description?: string;
+  @Column({ type: 'text', nullable: true })
+  description: string | null;
 
   @Column({
     type: 'enum',

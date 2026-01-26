@@ -78,7 +78,7 @@ export class LeadNoteController {
     req.auditPayload = {
       targetId: note.id,
       newValue,
-      description: `Create note for lead #${leadId}}`,
+      description: `Create note for lead #${leadId}`,
     };
 
     return ResponseService.format(note);
@@ -117,7 +117,7 @@ export class LeadNoteController {
     req.auditPayload = {
       targetId: noteId,
       oldValue,
-      description: `Remove note of lead #${leadId}}`,
+      description: `Remove note of lead #${leadId}`,
     };
 
     return ResponseService.format({
@@ -149,7 +149,7 @@ export class LeadNoteController {
         targetId: noteId,
         oldValue,
         newValue,
-        description: `Update note of lead #${leadId}}`,
+        description: `Update note of lead #${leadId}`,
       };
     }
 

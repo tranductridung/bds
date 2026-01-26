@@ -50,7 +50,7 @@ export class FeatureController {
     req.auditPayload = {
       targetId: feature.id,
       newValue: { name: feature.name },
-      description: `Create feature #${feature.id}}`,
+      description: `Create feature #${feature.id}`,
     };
 
     return ResponseService.format(feature);
@@ -95,7 +95,7 @@ export class FeatureController {
       targetId: feature.id,
       newValue,
       oldValue,
-      description: `Update feature #${feature.id}}`,
+      description: `Update feature #${feature.id}`,
     };
 
     return ResponseService.format(feature);
@@ -116,7 +116,7 @@ export class FeatureController {
     req.auditPayload = {
       targetId: featureId,
       oldValue,
-      description: `Update feature #${featureId}}`,
+      description: `Remove feature #${featureId}`,
     };
 
     return ResponseService.format({ message: 'Feature removed successfully' });

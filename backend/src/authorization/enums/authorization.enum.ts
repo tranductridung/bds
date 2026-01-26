@@ -1,4 +1,4 @@
 export enum Level {
-  SYSTEM = 'System',
-  BUSINESS = 'Business',
+  SYSTEM = 'SYSTEM',
+  BUSINESS = 'BUSINESS',
 }

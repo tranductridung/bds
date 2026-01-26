@@ -32,11 +32,11 @@ export class CreateLeadDto {
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  budgetMin?: number;
+  budgetMin: number | null;
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  budgetMax?: number;
+  budgetMax: number | null;
 }

@@ -1,5 +1,5 @@
 import * as bcrypt from 'bcrypt';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserService } from 'src/user/user.service';
@@ -45,7 +45,7 @@ export class RefreshTokenService {
     return token;
   }
 
-  async removeToken(refreshToken: string, userId: number) {
+  async revokeToken(refreshToken: string, userId: number) {
     const tokens = await this.tokenRepository.find({
       where: { user: { id: userId } },
     });
@@ -57,8 +57,23 @@ export class RefreshTokenService {
     }
   }
 
+  async revokeAllTokens(userId: number, manager?: EntityManager) {
+    const repo = manager
+      ? manager.getRepository(RefreshToken)
+      : this.tokenRepository;
+    await repo
+      .createQueryBuilder()
+      .update()
+      .set({
+        revokedAt: new Date(),
+      })
+      .where('userId = :userId', { userId })
+      .andWhere('revokedAt IS NULL')
+      .execute();
+  }
+
   async remove(id: string) {
-    await this.tokenRepository.delete({ id });
+    await this.tokenRepository.update(id, { revokedAt: new Date() });
   }
 
   async isTokenExist(refreshToken: string, userId: number) {
@@ -88,5 +103,32 @@ export class RefreshTokenService {
     const token = await this.tokenRepository.findOneBy({ id });
     if (!token) throw new NotFoundException('Token not found');
     return token;
+  }
+
+  async cleanupExpiredTokens(now: Date, limit = 1000) {
+    try {
+      const threshold = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const ids = await this.tokenRepository
+        .createQueryBuilder('t')
+        .select('t.id', 'id')
+        .where('t.expiredAt < :threshold OR t.revokedAt < :threshold', {
+          threshold,
+        })
+        .orderBy('LEAST(t.expiredAt, t.revokedAt)', 'ASC')
+        .limit(limit)
+        .getRawMany<{ id: number }>();
+
+      const deleteIds = ids.map((i) => i.id);
+
+      if (deleteIds.length === 0) {
+        return;
+      }
+
+      const result = await this.tokenRepository.delete(deleteIds);
+      return result;
+    } catch (error) {
+      console.log('Error cleaning up expired tokens:', error);
+      throw error;
+    }
   }
 }

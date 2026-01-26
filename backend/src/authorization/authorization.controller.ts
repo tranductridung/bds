@@ -131,10 +131,12 @@ export class AuthorizationController {
   @RequirePermissions('authorization:create')
   @Patch('users/:userId/roles')
   async assignRoleToUser(
+    @Req() req: Request,
     @Param('userId', ParseIntPipe) userId: number,
     @Body('roleId', ParseIntPipe) roleId: number,
   ) {
     const userRole = await this.authorizationService.assignRoleToUser(
+      Number(req?.user?.id),
       userId,
       roleId,
     );

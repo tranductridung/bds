@@ -34,6 +34,9 @@ export class PermissionSeed {
 
       'log:audit',
       'log:system',
+
+      'notification',
+      'reminder',
     ];
 
     // Get current permission in DB

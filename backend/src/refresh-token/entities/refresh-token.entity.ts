@@ -1,5 +1,4 @@
 import {
-  Index,
   Column,
   Entity,
   ManyToOne,
@@ -18,8 +17,10 @@ export class RefreshToken {
   hashedToken: string;
 
   @Column()
-  @Index()
   expiredAt: Date;
+
+  @Column({ type: 'date', nullable: true })
+  revokedAt: Date | null;
 
   @CreateDateColumn({ select: false })
   createdAt: Date;

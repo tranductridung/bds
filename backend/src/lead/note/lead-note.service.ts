@@ -1,11 +1,11 @@
 import { LeadNote } from './lead-note.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { buildDiff } from '../../common/helpers/build-diff.helper';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateLeadNoteDto } from './dto/create-lead-note.dto';
 import { UpdateLeadNoteDto } from './dto/update-lead-note.dto';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { PaginationDto } from '@/src/common/dtos/pagination.dto';
+import { buildDiff } from '../../common/helpers/build-diff.helper';
 import { LeadActivityService } from '../activity/lead-activity.service';
 import { LeadActivityAction, LeadActivityResource } from '../enums/lead.enum';
 

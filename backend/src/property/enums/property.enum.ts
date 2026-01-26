@@ -1,11 +1,11 @@
 export enum PropertySystemStatus {
-  DRAFT = 'Draft',
-  PUBLISHED = 'Published',
-  ARCHIVED = 'Archived',
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  ARCHIVED = 'ARCHIVED',
 }
 
 export enum PropertyBusinessStatus {
-  AVAILABLE = 'Available',
-  SOLD = 'Sold',
-  RENTED = 'Rented',
+  AVAILABLE = 'AVAILABLE',
+  SOLD = 'SOLD',
+  RENTED = 'RENTED',
 }
