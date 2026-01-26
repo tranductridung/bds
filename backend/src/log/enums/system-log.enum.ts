@@ -1,6 +1,6 @@
 export enum SystemLogLevel {
-  INFO = 'info',
-  WARN = 'warn',
-  ERROR = 'error',
-  SECURITY = 'security',
+  INFO = 'INFO',
+  WARN = 'WARN',
+  ERROR = 'ERROR',
+  SECURITY = 'SECURITY',
 }

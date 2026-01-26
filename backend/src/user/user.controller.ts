@@ -22,19 +22,38 @@ import { AuthJwtGuard } from '../authentication/guards/auth.guard';
 import { ResponseService } from '../common/helpers/response.service';
 import { SuperAdminGuard } from '../authorization/guards/superadmin.guard';
 import { PermissionsGuard } from 'src/authorization/guards/permission.guard';
-import { RequirePermissions } from '../authentication/decorators/permissions.decorator';
 import { UserPayload } from '../authentication/interfaces/user-payload.interface';
+import { RequirePermissions } from '../authentication/decorators/permissions.decorator';
 
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @RequirePermissions('user:update')
+  @UseGuards(SuperAdminGuard)
+  @Post()
+  async banUser(
+    @Req() req: Request,
+    @Body('userId', ParseIntPipe) userId: number,
+    @Body() reason: string,
+  ) {
+    const user = await this.userService.banUser(
+      Number(req?.user?.id),
+      userId,
+      reason,
+    );
+    return ResponseService.format(user);
+  }
+
   @RequirePermissions('user:create')
   @UseGuards(SuperAdminGuard)
   @Post()
   async create(@Req() req: Request, @Body() createUserDto: CreateUserDTO) {
-    const user = await this.userService.createUserBySuperAdmin(createUserDto);
+    const user = await this.userService.createUserBySuperAdmin(
+      Number(req?.user?.id),
+      createUserDto,
+    );
     return ResponseService.format(user);
   }
 

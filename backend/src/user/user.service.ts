@@ -15,11 +15,14 @@ import { Repository, DataSource } from 'typeorm';
 import { MailService } from '../mail/mail.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserStatus } from '../user/enums/user.enum';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDTO } from './dto/change-pass.dto';
 import { Role } from '../authorization/entities/role.entity';
 import { PaginationDto } from './../common/dtos/pagination.dto';
+import { AlertEvents } from '../notification/events/alert.events';
+import { RefreshTokenService } from '../refresh-token/refresh-token.service';
 import { AuthorizationService } from './../authorization/authorization.service';
 
 @Injectable()
@@ -31,6 +34,8 @@ export class UserService {
     private readonly dataSource: DataSource,
     private readonly mailService: MailService,
     private readonly jwtService: JwtService,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly refreshTokenService: RefreshTokenService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
   ) {}
@@ -175,34 +180,36 @@ export class UserService {
     return { message: 'Reset password success!' };
   }
 
-  async changePassword(data: ChangePasswordDTO, id: number) {
-    const user = await this.userRepo.findOne({
-      where: { id },
-      select: ['id', 'password'],
-    });
+  async changePassword(data: ChangePasswordDTO, userId: number) {
+    await this.dataSource.transaction(async (manager) => {
+      const user = await manager.findOne(User, {
+        where: { id: userId },
+        select: ['id', 'password'],
+      });
 
-    if (!user) throw new NotFoundException('User not found!');
+      if (!user) throw new NotFoundException('User not found!');
 
-    if (!user.password)
-      throw new BadRequestException(
-        'Password not set for this user. Please check your email to set your password!',
+      if (!user.password)
+        throw new BadRequestException(
+          'Password not set for this user. Please check your email to set your password!',
+        );
+
+      const isMatch = await bcrypt.compare(data.oldPassword, user.password);
+      if (!isMatch) {
+        throw new UnauthorizedException('Password incorrect!');
+      }
+
+      user.password = await bcrypt.hash(
+        data.newPassword,
+        Number(this.configService.get('SALT')) || 10,
       );
 
-    const isMatch = await bcrypt.compare(data.oldPassword, user.password);
-    if (!isMatch) {
-      throw new UnauthorizedException('Password incorrect!');
-    }
-
-    user.password = await bcrypt.hash(
-      data.newPassword,
-      Number(this.configService.get('SALT')) || 10,
-    );
-
-    await this.userRepo.save(user);
+      await this.userRepo.save(user);
+      await this.refreshTokenService.revokeAllTokens(userId, manager);
+    });
   }
 
   async getUserPermission(userId: number, resource?: string) {
-    console.log(userId, resource);
     const permissions = await this.authorizationService.getPermissions(
       userId,
       resource,
@@ -210,7 +217,10 @@ export class UserService {
     return permissions;
   }
 
-  async createInitialSuperAdmin(createUserDto: CreateUserDTO) {
+  async createInitialSuperAdmin(
+    currentUserId: number,
+    createUserDto: CreateUserDTO,
+  ) {
     const queryRunner = this.dataSource.createQueryRunner();
 
     await queryRunner.connect();
@@ -235,6 +245,7 @@ export class UserService {
       const adminRole =
         await this.authorizationService.findRoleByName('superadmin');
       await this.authorizationService.assignRoleToUser(
+        currentUserId,
         user.id,
         adminRole.id,
         queryRunner.manager,
@@ -253,8 +264,8 @@ export class UserService {
   }
 
   async createUserBySuperAdmin(
+    currentUserId: number,
     createUserDto: CreateUserDTO,
-    // creatorId: number,
   ) {
     // Check if creator is superadmin
     // const creatorRoles =
@@ -299,6 +310,7 @@ export class UserService {
 
       // Assign role to user
       await this.authorizationService.assignRoleToUser(
+        currentUserId,
         newUser.id,
         role.id,
         queryRunner.manager,
@@ -337,5 +349,40 @@ export class UserService {
       ...result,
       roles,
     };
+  }
+
+  async banUser(currentUserId: number, userId: number, reason: string) {
+    if (currentUserId === userId) {
+      throw new BadRequestException('Cannot ban yourself!');
+    }
+
+    const user = await this.dataSource.transaction(async (manager) => {
+      const user = await manager.findOne(User, {
+        where: { id: userId },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      if (user.status === UserStatus.BANNED) {
+        throw new BadRequestException('User is already banned!');
+      }
+
+      user.status = UserStatus.BANNED;
+      await manager.save(user);
+
+      await this.refreshTokenService.revokeAllTokens(userId, manager);
+
+      return user;
+    });
+
+    this.eventEmitter.emit(AlertEvents.AUTHEN_ACCOUNT_BANNED, {
+      receiverIds: [userId],
+      actorId: currentUserId,
+      reason: reason.trim(),
+    });
+
+    return user;
   }
 }

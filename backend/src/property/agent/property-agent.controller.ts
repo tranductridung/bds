@@ -43,6 +43,7 @@ export class PropertyAgentController {
     @Body('agentId', ParseIntPipe) agentId: number,
   ) {
     const propertyAgent = await this.propertyAgentService.addAgentToProperty(
+      Number(req?.user?.id),
       propertyId,
       agentId,
     );
@@ -50,7 +51,7 @@ export class PropertyAgentController {
     req.auditPayload = {
       targetId: propertyAgent.id,
       newValue: { agentId: propertyAgent.agent.id },
-      description: `Create note for lead #${propertyAgent.id}}`,
+      description: `Create note for lead #${propertyAgent.id}`,
     };
 
     return ResponseService.format(propertyAgent);
@@ -84,6 +85,7 @@ export class PropertyAgentController {
     @Param('agentId', ParseIntPipe) agentId: number,
   ) {
     const propertyAgent = await this.propertyAgentService.removeAgentOfProperty(
+      Number(req?.user?.id),
       propertyId,
       agentId,
     );
@@ -91,7 +93,7 @@ export class PropertyAgentController {
     req.auditPayload = {
       targetId: propertyAgent.id,
       oldValue: { agentId: propertyAgent.agent.id },
-      description: `Remove agent #${propertyAgent.agent.id} of property #${propertyAgent.property.id}}`,
+      description: `Remove agent #${propertyAgent.agent.id} of property #${propertyAgent.property.id}`,
     };
 
     return ResponseService.format({

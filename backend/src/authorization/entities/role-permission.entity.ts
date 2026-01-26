@@ -4,6 +4,7 @@ import {
   ManyToOne,
   JoinColumn,
   PrimaryGeneratedColumn,
+  Column,
 } from 'typeorm';
 import { Role } from './role.entity';
 import { Permission } from './permission.entity';
@@ -13,6 +14,12 @@ import { Permission } from './permission.entity';
 export class RolePermission {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column()
+  roleId: number;
+
+  @Column()
+  permissionId: number;
 
   @ManyToOne(() => Role, (role) => role.rolePermissions, {
     onDelete: 'RESTRICT',

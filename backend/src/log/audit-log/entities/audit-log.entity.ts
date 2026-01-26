@@ -28,19 +28,19 @@ export class AuditLog {
   targetId: number;
 
   @Column({ type: 'json', nullable: true })
-  oldValue: ActivityValue;
+  oldValue: ActivityValue | null;
 
   @Column({ type: 'json', nullable: true })
-  newValue: ActivityValue;
+  newValue: ActivityValue | null;
 
   @Column({ type: 'text', nullable: true })
-  description?: string;
+  description: string | null;
 
-  @Column({ nullable: true })
-  ip?: string;
+  @Column({ type: 'varchar', nullable: true })
+  ip: string | null;
 
-  @Column({ nullable: true })
-  userAgent?: string;
+  @Column({ type: 'varchar', nullable: true })
+  userAgent: string | null;
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
@@ -50,4 +50,7 @@ export class AuditLog {
   })
   @JoinColumn({ name: 'actorId' })
   actor: User;
+
+  @Column()
+  actorId: number;
 }

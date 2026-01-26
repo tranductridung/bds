@@ -51,7 +51,7 @@ export class PropertyFeatureController {
     req.auditPayload = {
       targetId: propertyFeature.id,
       newValue: { featureId: propertyFeature.feature.id },
-      description: `Add feature #${propertyFeature.feature.id} to property #${propertyFeature.property.id}}`,
+      description: `Add feature #${propertyFeature.feature.id} to property #${propertyFeature.property.id}`,
     };
 
     return ResponseService.format(propertyFeature);
@@ -91,7 +91,7 @@ export class PropertyFeatureController {
     req.auditPayload = {
       targetId: propertyFeature.id,
       oldValue: { featureId: propertyFeature.feature.id },
-      description: `Remove feature #${propertyFeature.feature.id} of property #${propertyFeature.property.id}}`,
+      description: `Remove feature #${propertyFeature.feature.id} of property #${propertyFeature.property.id}`,
     };
 
     return ResponseService.format({

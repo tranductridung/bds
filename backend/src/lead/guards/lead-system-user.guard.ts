@@ -5,6 +5,7 @@ import {
   NotFoundException,
   ForbiddenException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { DataSource } from 'typeorm';
@@ -25,7 +26,7 @@ export class LeadSystemUserGuard implements CanActivate {
 
     const leadId = Number(request.params.leadId);
 
-    if (!leadId) throw new NotFoundException('Lead not found');
+    if (!leadId) throw new BadRequestException('Lead ID is required');
 
     const leadExist = await this.dataSource
       .getRepository(Lead)

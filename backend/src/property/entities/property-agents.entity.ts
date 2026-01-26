@@ -1,4 +1,5 @@
 import {
+  Column,
   Entity,
   Unique,
   ManyToOne,
@@ -33,4 +34,10 @@ export class PropertyAgent {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @Column()
+  propertyId: number;
+
+  @Column()
+  agentId: number;
 }

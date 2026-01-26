@@ -21,8 +21,8 @@ export class TeamMember {
   @Column()
   joinedAt: Date;
 
-  @Column({ nullable: true })
-  leftAt?: Date;
+  @Column({ type: 'date', nullable: true })
+  leftAt: Date | null;
 
   @Column({ type: 'enum', enum: MemberRole, default: MemberRole.MEMBER })
   role: MemberRole;
@@ -44,4 +44,10 @@ export class TeamMember {
   })
   @JoinColumn({ name: 'teamId' })
   team: Team;
+
+  @Column()
+  teamId: number;
+
+  @Column()
+  memberId: number;
 }

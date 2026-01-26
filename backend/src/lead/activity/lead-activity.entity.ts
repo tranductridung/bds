@@ -33,13 +33,13 @@ export class LeadActivity {
   resourceId: number;
 
   @Column({ type: 'json', nullable: true })
-  oldValue: ActivityValue;
+  oldValue: ActivityValue | null;
 
   @Column({ type: 'json', nullable: true })
-  newValue: ActivityValue;
+  newValue: ActivityValue | null;
 
   @Column({ type: 'text', nullable: true })
-  description?: string;
+  description: string | null;
 
   @CreateDateColumn({ select: false })
   createdAt: Date;
@@ -55,7 +55,14 @@ export class LeadActivity {
 
   @ManyToOne(() => User, {
     onDelete: 'RESTRICT',
+    nullable: true,
   })
   @JoinColumn({ name: 'performedById' })
-  performedBy?: User;
+  performedBy: User | null;
+
+  @Column()
+  leadId: number;
+
+  @Column()
+  performedById: number;
 }

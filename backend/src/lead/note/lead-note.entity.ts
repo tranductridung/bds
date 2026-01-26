@@ -28,4 +28,7 @@ export class LeadNote {
   })
   @JoinColumn({ name: 'leadId' })
   lead: Lead;
+
+  @Column()
+  leadId: number;
 }

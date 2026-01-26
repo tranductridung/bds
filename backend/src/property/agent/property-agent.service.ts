@@ -6,6 +6,8 @@ import {
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserService } from 'src/user/user.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PropertyEvents } from '../events/property.event';
 import { PaginationDto } from '@/src/common/dtos/pagination.dto';
 import { PropertyAgent } from '../entities/property-agents.entity';
 
@@ -15,9 +17,14 @@ export class PropertyAgentService {
     @InjectRepository(PropertyAgent)
     private readonly propertyAgentRepo: Repository<PropertyAgent>,
     private readonly userService: UserService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async addAgentToProperty(propertyId: number, agentId: number) {
+  async addAgentToProperty(
+    actorId: number,
+    propertyId: number,
+    agentId: number,
+  ) {
     // Check if property and agent is exist
     const agent = await this.userService.findOne(agentId, true);
 
@@ -38,6 +45,14 @@ export class PropertyAgentService {
     });
 
     await this.propertyAgentRepo.save(propertyAgent);
+
+    this.eventEmitter.emit(PropertyEvents.ASSIGNED, {
+      propertyId: propertyId,
+      receiverIds: [agentId],
+      actorId,
+      newValue: { agentId },
+    });
+
     return propertyAgent;
   }
 
@@ -63,7 +78,11 @@ export class PropertyAgentService {
     return { agents, total };
   }
 
-  async removeAgentOfProperty(propertyId: number, agentId: number) {
+  async removeAgentOfProperty(
+    actorId: number,
+    propertyId: number,
+    agentId: number,
+  ) {
     await this.userService.findOne(agentId, true);
 
     // Check if agent is exist in property
@@ -78,6 +97,13 @@ export class PropertyAgentService {
       throw new NotFoundException('Agent not belong to this property');
 
     await this.propertyAgentRepo.remove(propertyAgent);
+
+    this.eventEmitter.emit(PropertyEvents.UNASSIGNED, {
+      propertyId: propertyId,
+      receiverIds: [agentId],
+      actorId,
+      newValue: { agentId },
+    });
 
     return propertyAgent;
   }

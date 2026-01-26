@@ -23,19 +23,11 @@ export class Lead {
   @Column()
   fullName: string;
 
-  @Column({ nullable: true })
-  phoneNumber: string;
+  @Column({ type: 'varchar', nullable: true })
+  phoneNumber: string | null;
 
-  @Column({ nullable: true })
-  requirement: string;
-
-  @Column('decimal', {
-    precision: 15,
-    scale: 2,
-    transformer: new ColumnNumericTransformer(),
-    nullable: true,
-  })
-  budgetMin: number;
+  @Column({ type: 'varchar', nullable: true })
+  requirement: string | null;
 
   @Column('decimal', {
     precision: 15,
@@ -43,7 +35,15 @@ export class Lead {
     transformer: new ColumnNumericTransformer(),
     nullable: true,
   })
-  budgetMax: number;
+  budgetMin: number | null;
+
+  @Column('decimal', {
+    precision: 15,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+    nullable: true,
+  })
+  budgetMax: number | null;
 
   @Column({
     type: 'enum',

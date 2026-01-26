@@ -7,7 +7,7 @@ import {
   PropertyBusinessStatus,
   PropertySystemStatus,
 } from './enums/property.enum';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { UserService } from '../user/user.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Property } from './entities/property.entity';
@@ -15,6 +15,9 @@ import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { PaginationDto } from '../common/dtos/pagination.dto';
 import { buildDiff } from '../common/helpers/build-diff.helper';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PropertyEvents } from './events/property.event';
+import { PropertyAgent } from './entities/property-agents.entity';
 
 @Injectable()
 export class PropertyService {
@@ -22,6 +25,8 @@ export class PropertyService {
     @InjectRepository(Property)
     private readonly propertyRepo: Repository<Property>,
     private readonly userService: UserService,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly dataSource: DataSource,
   ) {}
   async create(createPropertyDto: CreatePropertyDto): Promise<Property> {
     if (
@@ -117,6 +122,7 @@ export class PropertyService {
   }
 
   async changeSystemStatus(
+    currentUserId: number,
     propertyId: number,
     newStatus: PropertySystemStatus,
   ) {
@@ -138,10 +144,31 @@ export class PropertyService {
     property.systemStatus = newStatus;
     await this.propertyRepo.save(property);
 
+    const receiverIds = await this.getAgentIdsList(propertyId);
+    this.eventEmitter.emit(PropertyEvents.SYSTEM_STATUS_CHANGED, {
+      propertyId: propertyId,
+      receiverIds,
+      actorId: currentUserId,
+      oldValue,
+      newValue: { status: newStatus },
+    });
+
     return { oldValue, newValue: { status: newStatus } };
   }
 
+  async getAgentIdsList(propertyId: number) {
+    const rows = await this.dataSource
+      .createQueryBuilder(PropertyAgent, 'pa')
+      .select('pa.agentId', 'agentId')
+      .where('pa.propertyId = :propertyId', { propertyId })
+      .getRawMany<{ agentId: number }>();
+
+    const receiverIds = rows.map((r) => r.agentId);
+    return receiverIds;
+  }
+
   async changeBusinessStatus(
+    currentUserId: number,
     propertyId: number,
     newStatus: PropertyBusinessStatus,
   ) {
@@ -157,6 +184,15 @@ export class PropertyService {
 
     property.businessStatus = newStatus;
     await this.propertyRepo.save(property);
+
+    const receiverIds = await this.getAgentIdsList(propertyId);
+    this.eventEmitter.emit(PropertyEvents.BUSINESS_STATUS_CHANGED, {
+      propertyId: propertyId,
+      receiverIds,
+      actorId: currentUserId,
+      oldValue,
+      newValue: { status: newStatus },
+    });
 
     return { oldValue, newValue: { status: newStatus } };
   }

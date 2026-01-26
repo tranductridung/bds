@@ -22,11 +22,11 @@ export class Role {
   @BeforeInsert()
   @BeforeUpdate()
   normalizeName() {
-    this.name = this.name.toLowerCase();
+    this.name = this.name.trim().toLowerCase();
   }
 
-  @Column({ nullable: true })
-  description: string;
+  @Column({ type: 'text', nullable: true })
+  description: string | null;
 
   @Column({ default: false })
   isSystem: boolean;

@@ -128,6 +128,7 @@ export class PropertyController {
   ) {
     const { oldValue, newValue } =
       await this.propertyService.changeSystemStatus(
+        Number(req?.user?.id),
         propertyId,
         propertySystemStatus,
       );
@@ -159,6 +160,7 @@ export class PropertyController {
   ) {
     const { oldValue, newValue } =
       await this.propertyService.changeBusinessStatus(
+        Number(req?.user?.id),
         propertyId,
         propertyBusinessStatus,
       );

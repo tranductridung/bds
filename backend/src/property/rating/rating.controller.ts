@@ -77,7 +77,7 @@ export class PropertyRatingController {
         rating: rating.rating,
         comment: rating.comment?.slice(0, 50),
       },
-      description: `Remove rating #${rating.id}} of property #${propertyId}}`,
+      description: `Remove rating #${rating.id}} of property #${propertyId}`,
     };
 
     return ResponseService.format(rating);
@@ -118,7 +118,7 @@ export class PropertyRatingController {
       targetId: rating.id,
       oldValue,
       newValue,
-      description: `Update rating #${ratingId}} of property #${propertyId}}`,
+      description: `Update rating #${ratingId}} of property #${propertyId}`,
     };
 
     return ResponseService.format(rating);
@@ -140,7 +140,7 @@ export class PropertyRatingController {
     req.auditPayload = {
       targetId: ratingId,
       oldValue,
-      description: `Remove rating #${ratingId}} of property #${propertyId}}`,
+      description: `Remove rating #${ratingId}} of property #${propertyId}`,
     };
 
     return ResponseService.format({ message: 'Remove rating successfully!' });

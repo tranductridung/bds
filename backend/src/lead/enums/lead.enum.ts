@@ -1,18 +1,18 @@
 export enum LeadStatus {
-  NEW = 'New',
-  CONTACTED = 'Contacted',
-  QUALIFIED = 'Qualified',
-  LOST = 'Lost',
+  NEW = 'NEW',
+  CONTACTED = 'CONTACTED',
+  QUALIFIED = 'QUALIFIED',
+  LOST = 'LOST',
 }
 
 export enum LeadActivityAction {
-  CREATE = 'Create',
-  UPDATE = 'Update',
-  DELETE = 'Delete',
+  CREATE = 'CREATE',
+  UPDATE = 'UPDATE',
+  DELETE = 'DELETE',
 }
 
 export enum LeadActivityResource {
-  LEAD = 'Lead',
-  NOTE = 'Note',
-  ASSIGNMENT = 'Assignment',
+  LEAD = 'LEAD',
+  NOTE = 'NOTE',
+  ASSIGNMENT = 'ASSIGNMENT',
 }

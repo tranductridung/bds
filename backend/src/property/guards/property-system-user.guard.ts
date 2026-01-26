@@ -5,6 +5,7 @@ import {
   NotFoundException,
   ForbiddenException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { DataSource } from 'typeorm';
@@ -30,7 +31,7 @@ export class PropertySystemUserGuard implements CanActivate {
     const propertyId = Number(request.params.propertyId);
 
     if (!propertyId) {
-      throw new NotFoundException('Property not found');
+      throw new BadRequestException('Property ID is required');
     }
 
     const propertyExist = await this.dataSource
