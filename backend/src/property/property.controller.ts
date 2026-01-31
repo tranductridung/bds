@@ -30,8 +30,8 @@ import { PropertyAccessGuard } from './guards/property-access.guard';
 import { ResponseService } from '../common/helpers/response.service';
 import { SystemUserGuard } from '../authorization/guards/system-user.guard';
 import { PermissionsGuard } from 'src/authorization/guards/permission.guard';
-import { RequirePermissions } from '../authentication/decorators/permissions.decorator';
 import { PropertySystemUserGuard } from './guards/property-system-user.guard';
+import { RequirePermissions } from '../authentication/decorators/permissions.decorator';
 
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @Controller('properties')
@@ -50,7 +50,6 @@ export class PropertyController {
     @Body() createpropertyDto: CreatePropertyDto,
   ) {
     const property = await this.propertyService.create(createpropertyDto);
-
     req.auditPayload = {
       targetId: property.id,
       newValue: {

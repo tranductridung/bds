@@ -1,9 +1,14 @@
+import {
+  Inject,
+  forwardRef,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { EntityManager, Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserService } from 'src/user/user.service';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { UserService } from '../user/user.service';
+import { EntityManager, Repository } from 'typeorm';
 import { RefreshToken } from './entities/refresh-token.entity';
 
 @Injectable()
@@ -11,6 +16,7 @@ export class RefreshTokenService {
   constructor(
     @InjectRepository(RefreshToken)
     private tokenRepository: Repository<RefreshToken>,
+    @Inject(forwardRef(() => UserService))
     private userService: UserService,
     private configService: ConfigService,
   ) {}

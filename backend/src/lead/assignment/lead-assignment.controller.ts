@@ -28,26 +28,17 @@ import { SystemUserGuard } from '@/src/authorization/guards/system-user.guard';
 import { RequirePermissions } from '../../authentication/decorators/permissions.decorator';
 import { AuditInterceptor } from '@/src/log/audit-log/interceptors/audit-log.interceptor';
 
-@UseGuards(AuthJwtGuard, PermissionsGuard)
+@UseGuards(AuthJwtGuard, PermissionsGuard, SystemUserGuard)
 @Controller('assignments')
 export class AssignmentController {
   constructor(private readonly leadAssignmentService: LeadAssignmentService) {}
 
   @RequirePermissions('lead:assignment:read')
-  @UseGuards(SystemUserGuard)
   @Get()
   async findAll(@Query() paginationDto: PaginationDto) {
     const { assignments, total } =
       await this.leadAssignmentService.findAll(paginationDto);
     return ResponseService.format(assignments, { total });
-  }
-
-  @RequirePermissions('lead:assignment:read')
-  @UseGuards(LeadAccessGuard)
-  @Get(':assignmentId')
-  async findOne(@Param('assignmentId', ParseIntPipe) assignmentId: number) {
-    const assignment = await this.leadAssignmentService.findOne(assignmentId);
-    return ResponseService.format(assignment);
   }
 }
 
@@ -126,5 +117,19 @@ export class LeadAssignmentController {
     return ResponseService.format({
       message: 'Remove assignment successfully!',
     });
+  }
+
+  @RequirePermissions('lead:assignment:read')
+  @UseGuards(LeadAccessGuard)
+  @Get(':assignmentId')
+  async findOne(
+    @Param('leadId', ParseIntPipe) leadId: number,
+    @Param('assignmentId', ParseIntPipe) assignmentId: number,
+  ) {
+    const assignment = await this.leadAssignmentService.findAssignmentOfLead(
+      leadId,
+      assignmentId,
+    );
+    return ResponseService.format(assignment);
   }
 }

@@ -42,14 +42,6 @@ export class RatingController {
     const { ratings, total } = await this.ratingService.findAll(paginationDto);
     return ResponseService.format(ratings, { total });
   }
-
-  @RequirePermissions('property:rating:read')
-  @UseGuards(PropertyAccessGuard)
-  @Get(':ratingId')
-  async findOne(@Param('ratingId', ParseIntPipe) ratingId: number) {
-    const rating = await this.ratingService.findOne(ratingId);
-    return ResponseService.format(rating);
-  }
 }
 
 @UseGuards(AuthJwtGuard, PermissionsGuard, PropertyAccessGuard)
@@ -144,5 +136,18 @@ export class PropertyRatingController {
     };
 
     return ResponseService.format({ message: 'Remove rating successfully!' });
+  }
+
+  @RequirePermissions('property:rating:read')
+  @Get(':ratingId')
+  async findOne(
+    @Param('propertyId', ParseIntPipe) propertyId: number,
+    @Param('ratingId', ParseIntPipe) ratingId: number,
+  ) {
+    const rating = await this.ratingService.findRatingOfProperty(
+      propertyId,
+      ratingId,
+    );
+    return ResponseService.format(rating);
   }
 }

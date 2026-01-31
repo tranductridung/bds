@@ -1,13 +1,7 @@
-import {
-  Inject,
-  Injectable,
-  forwardRef,
-  NotFoundException,
-} from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Rating } from '../entities/ratings.entity';
-import { PropertyService } from '../property.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PaginationDto } from '../../common/dtos/pagination.dto';
 import { UpdateRatingDto } from '../dto/rating/update-rating.dto';
 import { CreateRatingDto } from '../dto/rating/create-rating.dto';
@@ -18,8 +12,6 @@ export class RatingService {
   constructor(
     @InjectRepository(Rating)
     private readonly ratingRepo: Repository<Rating>,
-    @Inject(forwardRef(() => PropertyService))
-    private readonly propertyService: PropertyService,
   ) {}
 
   async create(
@@ -57,27 +49,12 @@ export class RatingService {
     return { ratings, total };
   }
 
-  async findOne(ratingId: number): Promise<Rating> {
-    const rating = await this.ratingRepo.findOne({
-      where: { id: ratingId },
-    });
-
-    if (!rating) throw new NotFoundException('Rating not found!');
-
-    return rating;
-  }
-
   async update(
     propertyId: number,
     ratingId: number,
     updateRatingDto: UpdateRatingDto,
   ) {
-    const rating = await this.ratingRepo.findOne({
-      where: { id: ratingId, property: { id: propertyId } },
-      relations: ['property'],
-    });
-
-    if (!rating) throw new NotFoundException('Rating not found!');
+    const rating = await this.findRatingOfProperty(propertyId, ratingId);
 
     const oldRating = structuredClone(rating);
 
@@ -91,11 +68,7 @@ export class RatingService {
   }
 
   async remove(propertyId: number, ratingId: number) {
-    const rating = await this.ratingRepo.findOne({
-      where: { id: ratingId, property: { id: propertyId } },
-    });
-
-    if (!rating) throw new NotFoundException('Rating not found!');
+    const rating = await this.findRatingOfProperty(propertyId, ratingId);
 
     await this.ratingRepo.remove(rating);
 
@@ -129,5 +102,18 @@ export class RatingService {
 
     const [ratings, total] = await queryBuilder.getManyAndCount();
     return { ratings, total };
+  }
+
+  async findRatingOfProperty(
+    propertyId: number,
+    ratingId: number,
+  ): Promise<Rating> {
+    const rating = await this.ratingRepo.findOne({
+      where: { id: ratingId, propertyId },
+    });
+
+    if (!rating) throw new NotFoundException('Rating not found!');
+
+    return rating;
   }
 }

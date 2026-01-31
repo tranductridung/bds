@@ -6,6 +6,7 @@ import {
   ConflictException,
   BadRequestException,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -27,6 +28,7 @@ import { AuthorizationService } from './../authorization/authorization.service';
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
@@ -35,6 +37,7 @@ export class UserService {
     private readonly mailService: MailService,
     private readonly jwtService: JwtService,
     private readonly eventEmitter: EventEmitter2,
+    @Inject(forwardRef(() => RefreshTokenService))
     private readonly refreshTokenService: RefreshTokenService,
     @Inject(forwardRef(() => AuthorizationService))
     private readonly authorizationService: AuthorizationService,
@@ -255,7 +258,8 @@ export class UserService {
       await queryRunner.commitTransaction();
       return { ...result, roles: ['superadmin'] };
     } catch (error) {
-      console.log(error);
+      this.logger.error(error);
+
       await queryRunner.rollbackTransaction();
       throw error;
     } finally {
