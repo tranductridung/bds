@@ -74,9 +74,12 @@ export class LeadActivityService {
     return { activities, total };
   }
 
-  async findOne(id: number): Promise<LeadActivity> {
+  async findActivityOfLead(
+    leadId: number,
+    assignmentId: number,
+  ): Promise<LeadActivity> {
     const activity = await this.leadActivityRepo.findOne({
-      where: { id },
+      where: { leadId, id: assignmentId },
       relations: ['lead', 'performedBy'],
     });
 

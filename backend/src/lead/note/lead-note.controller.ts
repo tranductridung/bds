@@ -27,8 +27,8 @@ import { AuthJwtGuard } from '../../authentication/guards/auth.guard';
 import { ResponseService } from '@/src/common/helpers/response.service';
 import { PermissionsGuard } from 'src/authorization/guards/permission.guard';
 import { SystemUserGuard } from '@/src/authorization/guards/system-user.guard';
-import { RequirePermissions } from '../../authentication/decorators/permissions.decorator';
 import { AuditInterceptor } from '@/src/log/audit-log/interceptors/audit-log.interceptor';
+import { RequirePermissions } from '../../authentication/decorators/permissions.decorator';
 
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @Controller('notes')
@@ -41,14 +41,6 @@ export class NoteController {
   async findAll(@Query() paginationDto: PaginationDto) {
     const { notes, total } = await this.leadNoteService.findAll(paginationDto);
     return ResponseService.format(notes, { total });
-  }
-
-  @RequirePermissions('lead:note:read')
-  @UseGuards(LeadAccessGuard)
-  @Get(':noteId')
-  async findOne(@Param('noteId', ParseIntPipe) noteId: number) {
-    const note = await this.leadNoteService.findOne(noteId);
-    return ResponseService.format(note);
   }
 }
 
@@ -153,6 +145,16 @@ export class LeadNoteController {
       };
     }
 
+    return ResponseService.format(note);
+  }
+
+  @RequirePermissions('lead:note:read')
+  @Get(':noteId')
+  async findOne(
+    @Param('leadId', ParseIntPipe) leadId: number,
+    @Param('noteId', ParseIntPipe) noteId: number,
+  ) {
+    const note = await this.leadNoteService.findNoteOfLead(leadId, noteId);
     return ResponseService.format(note);
   }
 }

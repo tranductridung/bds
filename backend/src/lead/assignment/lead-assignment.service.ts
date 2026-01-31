@@ -5,8 +5,9 @@ import {
 } from '@nestjs/common';
 import { LeadEvents } from '../events/lead.event';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserService } from '@/src/user/user.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { User } from '@/src/user/entities/user.entity';
+import { UserStatus } from '@/src/user/enums/user.enum';
 import { LeadAssignment } from './lead-assignment.entity';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { PaginationDto } from '@/src/common/dtos/pagination.dto';
@@ -20,7 +21,6 @@ export class LeadAssignmentService {
     private readonly leadAssignmentRepo: Repository<LeadAssignment>,
     private readonly leadActivityService: LeadActivityService,
     private readonly dataSource: DataSource,
-    private readonly userService: UserService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -32,8 +32,8 @@ export class LeadAssignmentService {
     return await this.dataSource.transaction(async (manager) => {
       const assignment = await manager.findOne(LeadAssignment, {
         where: {
-          lead: { id: leadId },
-          agent: { id: agentId },
+          leadId,
+          agentId,
         },
       });
 
@@ -45,7 +45,7 @@ export class LeadAssignmentService {
 
       const oldPrimaryAssignment = await manager.findOne(LeadAssignment, {
         where: {
-          lead: { id: leadId },
+          leadId,
           isPrimary: true,
         },
         relations: ['agent'],
@@ -95,15 +95,22 @@ export class LeadAssignmentService {
 
   async create(currentUserId: number, leadId: number, agentId: number) {
     return await this.dataSource.transaction(async (manager) => {
-      const agent = await this.userService.findOne(agentId, true);
+      const isAgentExist = await manager.exists(User, {
+        where: {
+          id: agentId,
+          status: UserStatus.ACTIVE,
+        },
+      });
+
+      if (!isAgentExist) throw new NotFoundException('Agent not found');
 
       const repo = manager.getRepository(LeadAssignment);
 
       // Check if agent is exist in lead
       const leadAgentExist = await repo.findOne({
         where: {
-          lead: { id: leadId },
-          agent: { id: agentId },
+          leadId,
+          agentId,
         },
       });
 
@@ -114,15 +121,15 @@ export class LeadAssignmentService {
 
       const isPrimaryAgentExist = await repo.exists({
         where: {
-          lead: { id: leadId },
+          leadId,
           isPrimary: true,
         },
       });
 
       const assignment = repo.create({
         isPrimary: !isPrimaryAgentExist,
-        agent,
-        lead: { id: leadId },
+        agentId,
+        leadId,
       });
 
       await repo.save(assignment);
@@ -193,7 +200,7 @@ export class LeadAssignmentService {
     return assignment;
   }
 
-  async findAssignmentWithLead(
+  async findAssignmentOfLead(
     leadId: number,
     assignmentId: number,
     manager?: EntityManager,
@@ -214,7 +221,7 @@ export class LeadAssignmentService {
 
   async remove(currentUserId: number, leadId: number, assignmnetId: number) {
     return await this.dataSource.transaction(async (manager) => {
-      const assignment = await this.findAssignmentWithLead(
+      const assignment = await this.findAssignmentOfLead(
         leadId,
         assignmnetId,
         manager,

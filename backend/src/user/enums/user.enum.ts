@@ -9,4 +9,5 @@ export enum UserStatus {
   INACTIVE = 'INACTIVE',
   UNVERIFIED = 'UNVERIFIED',
   BANNED = 'BANNED',
+  LOCKED = 'LOCKED',
 }

@@ -72,28 +72,15 @@ export class LeadNoteService {
     return { notes, total };
   }
 
-  async findOne(id: number, manager?: EntityManager): Promise<LeadNote> {
-    const repo = manager ? manager.getRepository(LeadNote) : this.leadNoteRepo;
-
-    const note = await repo.findOne({
-      where: { id },
-      relations: ['lead'],
-    });
-
-    if (!note) throw new NotFoundException('Note not found');
-
-    return note;
-  }
-
-  async findNoteWithLead(
-    noteId: number,
+  async findNoteOfLead(
     leadId: number,
+    noteId: number,
     manager?: EntityManager,
   ): Promise<LeadNote> {
     const repo = manager ? manager.getRepository(LeadNote) : this.leadNoteRepo;
 
     const note = await repo.findOne({
-      where: { id: noteId, lead: { id: leadId } },
+      where: { id: noteId, leadId },
     });
 
     if (!note) throw new NotFoundException('Note not found');
@@ -103,7 +90,7 @@ export class LeadNoteService {
 
   async remove(currentUserId: number, leadId: number, noteId: number) {
     return await this.dataSource.transaction(async (manager) => {
-      const note = await this.findNoteWithLead(noteId, leadId, manager);
+      const note = await this.findNoteOfLead(leadId, noteId, manager);
 
       await manager.remove(LeadNote, note);
       const oldValue = { content: note.content.slice(0, 50) };
@@ -132,7 +119,7 @@ export class LeadNoteService {
     updateLeadNoteDto: UpdateLeadNoteDto,
   ) {
     return await this.dataSource.transaction(async (manager) => {
-      const note = await this.findNoteWithLead(noteId, leadId, manager);
+      const note = await this.findNoteOfLead(leadId, noteId, manager);
 
       const oldNote = structuredClone(note);
 

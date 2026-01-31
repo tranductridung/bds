@@ -6,11 +6,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserController } from './user.controller';
 import { forwardRef, Module } from '@nestjs/common';
 import { AuthorizationModule } from 'src/authorization/authorization.module';
+import { RefreshTokenModule } from '../refresh-token/refresh-token.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     forwardRef(() => AuthorizationModule),
+    forwardRef(() => RefreshTokenModule),
     JwtModule,
     MailModule,
   ],

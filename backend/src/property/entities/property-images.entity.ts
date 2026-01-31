@@ -1,11 +1,11 @@
 import {
   Column,
   Entity,
+  ManyToOne,
+  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
   PrimaryGeneratedColumn,
-  ManyToOne,
-  JoinColumn,
 } from 'typeorm';
 import { Property } from './property.entity';
 
@@ -17,8 +17,11 @@ export class PropertyImage {
   @Column()
   url: string;
 
-  @Column()
-  fileName: string;
+  @Column({ select: false })
+  originalName: string;
+
+  @Column({ select: false })
+  publicId: string;
 
   @Column()
   mimeType: string;
@@ -39,7 +42,7 @@ export class PropertyImage {
   updatedAt: Date;
 
   @ManyToOne(() => Property, (property) => property.propertyImages, {
-    onDelete: 'RESTRICT',
+    onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'propertyId' })
   property: Property;

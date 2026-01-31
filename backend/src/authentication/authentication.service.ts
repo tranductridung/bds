@@ -1,4 +1,5 @@
 import {
+  Logger,
   Injectable,
   NotFoundException,
   ForbiddenException,
@@ -15,12 +16,14 @@ import { User } from 'src/user/entities/user.entity';
 import { UserStatus } from '../user/enums/user.enum';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SetupPasswordDto } from './dto/setup-password.dto';
+import { UserPayload } from './interfaces/user-payload.interface';
 import { RefreshTokenService } from '../refresh-token/refresh-token.service';
 import { AuthorizationService } from '../authorization/authorization.service';
-import { UserPayload } from './interfaces/user-payload.interface';
 
 @Injectable()
 export class AuthenticationService {
+  private readonly logger = new Logger(AuthenticationService.name);
+
   constructor(
     private dataSource: DataSource,
     private jwtService: JwtService,
@@ -78,12 +81,11 @@ export class AuthenticationService {
         );
       case UserStatus.BANNED:
         throw new ForbiddenException('Account is banned!');
+      case UserStatus.LOCKED:
+        throw new ForbiddenException('Account is locked!');
     }
     return {
       sub: user.id,
-      // email: user.email,
-      // fullName: user.fullName,
-      // roles: user.roles,
     };
   }
 
@@ -106,7 +108,7 @@ export class AuthenticationService {
       if (!isTokenExist)
         throw new UnauthorizedException('Expired refresh token. Login again!');
     } catch (error) {
-      console.log(error);
+      this.logger.error(error);
       throw new UnauthorizedException('Invalid or expired refresh token!');
     }
 
@@ -170,6 +172,7 @@ export class AuthenticationService {
         payload.sub,
       );
     } catch (error) {
+      this.logger.error(error);
       throw new UnauthorizedException('Token invalid or expired!');
     }
   }

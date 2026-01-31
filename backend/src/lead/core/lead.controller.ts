@@ -22,12 +22,10 @@ import { LeadStatus } from '../enums/lead.enum';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
 import { LeadAccessGuard } from '../guards/lead.guard';
-import { LeadNoteService } from '../note/lead-note.service';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { AuditLog } from '@/src/log/decorators/audit.decorator';
 import { AuthJwtGuard } from '@/src/authentication/guards/auth.guard';
 import { LeadSystemUserGuard } from '../guards/lead-system-user.guard';
-import { LeadActivityService } from '../activity/lead-activity.service';
 import { ResponseService } from '@/src/common/helpers/response.service';
 import { LeadAssignmentService } from '../assignment/lead-assignment.service';
 import { SystemUserGuard } from '@/src/authorization/guards/system-user.guard';
@@ -42,8 +40,6 @@ export class LeadController {
   constructor(
     private readonly leadService: LeadService,
     private readonly leadAssignmentService: LeadAssignmentService,
-    private readonly leadNoteService: LeadNoteService,
-    private readonly leadActivityService: LeadActivityService,
   ) {}
 
   @RequirePermissions('lead:create')

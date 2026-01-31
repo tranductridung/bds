@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class MailService {
   private transporter: nodemailer.Transporter;
+  private readonly logger = new Logger(MailService.name);
 
   constructor(private configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
@@ -58,7 +59,7 @@ export class MailService {
     try {
       await this.sendEmail(email, 'Verify Email', '', htmlContent);
     } catch (error) {
-      console.log(error);
+      this.logger.error(error);
     }
   }
 
