@@ -15,29 +15,29 @@ import { User } from '@/src/user/entities/user.entity';
 @Unique(['agent', 'property'])
 export class PropertyAgent {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @ManyToOne(() => User, (agent) => agent.propertiesAgents, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'agentId' })
-  agent: User;
+  agent!: User;
 
   @ManyToOne(() => Property, (property) => property.propertiesAgents, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'propertyId' })
-  property: Property;
+  property!: Property;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @Column()
-  propertyId: number;
+  propertyId!: number;
 
   @Column()
-  agentId: number;
+  agentId!: number;
 }

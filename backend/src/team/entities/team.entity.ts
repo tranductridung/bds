@@ -11,20 +11,20 @@ import { TeamMember } from './team-members.entity';
 @Entity()
 export class Team {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column({ type: 'text', nullable: true })
-  description: string | null;
+  description!: string | null;
 
   @CreateDateColumn({ select: false })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ select: false })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @OneToMany(() => TeamMember, (tm) => tm.member)
-  teamMember: TeamMember[];
+  teamMember!: TeamMember[];
 }

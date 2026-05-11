@@ -12,41 +12,44 @@ import { Property } from './property.entity';
 @Entity()
 export class PropertyImage {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  url: string;
+  url!: string;
 
   @Column({ select: false })
-  originalName: string;
+  originalName!: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  filename!: string | null;
 
   @Column({ select: false })
-  publicId: string;
+  publicId!: string;
 
   @Column()
-  mimeType: string;
+  mimeType!: string;
 
   @Column()
-  size: number;
+  size!: number;
 
   @Column()
-  width: number;
+  width!: number;
 
   @Column()
-  height: number;
+  height!: number;
 
   @CreateDateColumn({ select: false })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ select: false })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @ManyToOne(() => Property, (property) => property.propertyImages, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'propertyId' })
-  property: Property;
+  property!: Property;
 
   @Column()
-  propertyId: number;
+  propertyId!: number;
 }

@@ -11,12 +11,12 @@ import { Type } from 'class-transformer';
 
 export class CreateLeadDto {
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
   @MinLength(1)
   @MaxLength(255)
-  fullName: string;
+  fullName!: string;
 
   @IsOptional()
   @IsString()
@@ -32,11 +32,11 @@ export class CreateLeadDto {
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  budgetMin: number | null;
+  budgetMin!: number | null;
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  budgetMax: number | null;
+  budgetMax!: number | null;
 }

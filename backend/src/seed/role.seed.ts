@@ -34,7 +34,7 @@ export class RoleSeed {
       // Get existing rolePermission
       const existingRolePermissions = await this.rolePermissionRepo.find({
         where: { role: { id: role.id } },
-        relations: ['permission'],
+        relations: { permission: true },
       });
       const existingPermissionIds = new Set(
         existingRolePermissions.map((rp) => rp.permission.id),

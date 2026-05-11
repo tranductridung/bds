@@ -6,8 +6,6 @@ import { UpdateLeadNoteDto } from './dto/update-lead-note.dto';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { PaginationDto } from '@/src/common/dtos/pagination.dto';
 import { buildDiff } from '../../common/helpers/build-diff.helper';
-import { LeadActivityService } from '../activity/lead-activity.service';
-import { LeadActivityAction, LeadActivityResource } from '../enums/lead.enum';
 
 @Injectable()
 export class LeadNoteService {
@@ -15,7 +13,6 @@ export class LeadNoteService {
     @InjectRepository(LeadNote)
     private readonly leadNoteRepo: Repository<LeadNote>,
     private readonly dataSource: DataSource,
-    private readonly leadActivityService: LeadActivityService,
   ) {}
 
   async create(
@@ -33,18 +30,18 @@ export class LeadNoteService {
 
       const newValue = { content: note.content.slice(0, 50) };
 
-      await this.leadActivityService.create(
-        leadId,
-        {
-          action: LeadActivityAction.CREATE,
-          resource: LeadActivityResource.NOTE,
-          newValue,
-          resourceId: note.id,
-          description: `Create new note for lead #${leadId}`,
-          performedById: currentUserId,
-        },
-        manager,
-      );
+      // await this.leadActivityService.create(
+      //   leadId,
+      //   {
+      //     action: LeadActivityAction.CREATE,
+      //     resource: LeadActivityResource.NOTE,
+      //     newValue,
+      //     resourceId: note.id,
+      //     description: `Create new note for lead #${leadId}`,
+      //     performedById: currentUserId,
+      //   },
+      //   manager,
+      // );
 
       return { note, newValue };
     });
@@ -95,18 +92,18 @@ export class LeadNoteService {
       await manager.remove(LeadNote, note);
       const oldValue = { content: note.content.slice(0, 50) };
 
-      await this.leadActivityService.create(
-        leadId,
-        {
-          action: LeadActivityAction.DELETE,
-          resource: LeadActivityResource.NOTE,
-          oldValue,
-          resourceId: noteId,
-          description: `Remove note of lead #${leadId}`,
-          performedById: currentUserId,
-        },
-        manager,
-      );
+      // await this.leadActivityService.create(
+      //   leadId,
+      //   {
+      //     action: LeadActivityAction.DELETE,
+      //     resource: LeadActivityResource.NOTE,
+      //     oldValue,
+      //     resourceId: noteId,
+      //     description: `Remove note of lead #${leadId}`,
+      //     performedById: currentUserId,
+      //   },
+      //   manager,
+      // );
 
       return { oldValue };
     });
@@ -128,20 +125,20 @@ export class LeadNoteService {
 
       const { oldValue, newValue } = buildDiff(oldNote, note);
 
-      if (oldValue || newValue)
-        await this.leadActivityService.create(
-          leadId,
-          {
-            action: LeadActivityAction.UPDATE,
-            resource: LeadActivityResource.NOTE,
-            resourceId: note.id,
-            oldValue,
-            newValue,
-            description: 'Update lead note',
-            performedById: currentUserId,
-          },
-          manager,
-        );
+      // if (oldValue || newValue)
+      //   await this.leadActivityService.create(
+      //     leadId,
+      //     {
+      //       action: LeadActivityAction.UPDATE,
+      //       resource: LeadActivityResource.NOTE,
+      //       resourceId: note.id,
+      //       oldValue,
+      //       newValue,
+      //       description: 'Update lead note',
+      //       performedById: currentUserId,
+      //     },
+      //     manager,
+      //   );
 
       return { oldValue, newValue, note };
     });

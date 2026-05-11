@@ -7,6 +7,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import {
+  SystemLogAction,
+  SystemLogActorType,
+  SystemLogTargetType,
+} from '../log/enums/system-log.enum';
 import { DataSource } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -14,11 +19,15 @@ import { UserService } from '../user/user.service';
 import { MailService } from '../mail/mail.service';
 import { User } from 'src/user/entities/user.entity';
 import { UserStatus } from '../user/enums/user.enum';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SetupPasswordDto } from './dto/setup-password.dto';
 import { UserPayload } from './interfaces/user-payload.interface';
+import { RequestContext } from '../common/types/request-context.interface';
+import { SystemLogEvents } from '../log/system-log/events/system-log.event';
 import { RefreshTokenService } from '../refresh-token/refresh-token.service';
 import { AuthorizationService } from '../authorization/authorization.service';
+import { ListenerSystemLogPayload } from '../log/system-log/events/system-log-events.payload';
 
 @Injectable()
 export class AuthenticationService {
@@ -32,24 +41,41 @@ export class AuthenticationService {
     private configService: ConfigService,
     private refreshTokenService: RefreshTokenService,
     private authorizationService: AuthorizationService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
-  async login(email: string, password: string) {
-    const payload = await this.validate(email, password);
+  async login(email: string, password: string, requestCtx: RequestContext) {
+    try {
+      const payload = await this.validate(email, password);
 
-    const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('ACCESS_TOKEN'),
-      expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRES'),
-    });
+      const accessToken = this.jwtService.sign(payload, {
+        secret: this.configService.get('ACCESS_TOKEN'),
+        expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRES'),
+      });
 
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('REFRESH_TOKEN'),
-      expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRES'),
-    });
+      const refreshToken = this.jwtService.sign(payload, {
+        secret: this.configService.get('REFRESH_TOKEN'),
+        expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRES'),
+      });
 
-    await this.refreshTokenService.create(refreshToken, payload.sub);
+      await this.refreshTokenService.create(refreshToken, payload.sub);
+      return { accessToken, refreshToken, user: payload };
+    } catch (error) {
+      this.logger.error(error);
 
-    return { accessToken, refreshToken, user: payload };
+      this.eventEmitter.emit(SystemLogEvents.AUTH_LOGIN_FAILED, {
+        action: SystemLogAction.AUTHENTICATION_FAILED,
+        actorId: undefined,
+        actorType: SystemLogActorType.ANONYMOUS,
+        targetType: SystemLogTargetType.AUTH,
+        targetId: undefined,
+        path: requestCtx.path,
+        method: requestCtx.method,
+        statusCode: requestCtx.statusCode,
+      } satisfies ListenerSystemLogPayload);
+    }
+
+    throw new UnauthorizedException('Invalid email or password');
   }
 
   async logout(refreshToken: string) {
@@ -82,7 +108,11 @@ export class AuthenticationService {
       case UserStatus.BANNED:
         throw new ForbiddenException('Account is banned!');
       case UserStatus.LOCKED:
-        throw new ForbiddenException('Account is locked!');
+        if (user.lockUntil && user.lockUntil.getTime() > Date.now())
+          throw new ForbiddenException('Account is locked!');
+        else {
+          await this.userService.unlockUser(user.id);
+        }
     }
     return {
       sub: user.id,

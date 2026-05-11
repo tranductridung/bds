@@ -4,12 +4,14 @@ import { NestFactory } from '@nestjs/core';
 import * as cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AllExceptionsFilter } from './log/system-log/filters/app-exception.filter';
 import { AuditInterceptor } from './log/audit-log/interceptors/audit-log.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.use(cookieParser());
+  app.set('trust proxy', true);
   app.setGlobalPrefix('api/v1');
   app.useGlobalInterceptors(app.get(AuditInterceptor));
   app.useGlobalPipes(

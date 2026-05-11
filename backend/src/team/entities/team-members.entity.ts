@@ -16,38 +16,38 @@ import { MemberRole } from '../enums/member-role.enum';
 @Unique(['team', 'member'])
 export class TeamMember {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  joinedAt: Date;
+  joinedAt!: Date;
 
   @Column({ type: 'date', nullable: true })
-  leftAt: Date | null;
+  leftAt!: Date | null;
 
   @Column({ type: 'enum', enum: MemberRole, default: MemberRole.MEMBER })
-  role: MemberRole;
+  role!: MemberRole;
 
   @CreateDateColumn({ select: false })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ select: false })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @ManyToOne(() => User, (member) => member.teamMember, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'memberId' })
-  member: User;
+  member!: User;
 
   @ManyToOne(() => Team, (team) => team.teamMember, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'teamId' })
-  team: Team;
+  team!: Team;
 
   @Column()
-  teamId: number;
+  teamId!: number;
 
   @Column()
-  memberId: number;
+  memberId!: number;
 }

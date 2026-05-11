@@ -16,6 +16,7 @@ import { AuthenticationService } from './authentication.service';
 import { ResponseService } from '../common/helpers/response.service';
 import { AuthJwtGuard, SetupPasswordJwtGuard } from './guards/auth.guard';
 import { RefreshTokenService } from './../refresh-token/refresh-token.service';
+import { RateLimit } from '../common/decorators/rate-limit.decorator';
 
 @Controller('authentication')
 export class AuthController {
@@ -25,6 +26,7 @@ export class AuthController {
     private readonly configService: ConfigService,
   ) {}
 
+  @RateLimit({ limit: 5, ttl: 60 })
   @Post('login')
   async login(
     @Req() req: Request,
@@ -34,7 +36,11 @@ export class AuthController {
     const { email, password } = loginDto;
 
     const { accessToken, refreshToken, user } =
-      await this.authenticationService.login(email, password);
+      await this.authenticationService.login(
+        email,
+        password,
+        req.requestContext,
+      );
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,

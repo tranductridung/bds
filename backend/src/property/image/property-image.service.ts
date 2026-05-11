@@ -1,15 +1,25 @@
+import {
+  SystemLogAction,
+  SystemLogActorType,
+  SystemLogTargetType,
+} from '@/src/log/enums/system-log.enum';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateImageDto } from '../dto/image/create-image.dto';
 import { PaginationDto } from '@/src/common/dtos/pagination.dto';
 import { v2 as Cloudinary, UploadApiResponse } from 'cloudinary';
 import { PropertyImage } from '../entities/property-images.entity';
+import { RequestContext } from '@/src/common/types/request-context.interface';
+import { SystemLogEvents } from '@/src/log/system-log/events/system-log.event';
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ListenerSystemLogPayload } from '@/src/log/system-log/events/system-log-events.payload';
 
 @Injectable()
 export class PropertyImageService {
   private readonly logger = new Logger(PropertyImageService.name);
   constructor(
+    private eventEmitter: EventEmitter2,
     @InjectRepository(PropertyImage)
     private imageRepo: Repository<PropertyImage>,
 
@@ -45,11 +55,13 @@ export class PropertyImageService {
     propertyId: number,
     result: UploadApiResponse,
     file: Express.Multer.File,
+    filename?: string,
   ) {
     const image: CreateImageDto = this.imageRepo.create({
       propertyId,
+      filename: filename ?? null,
       url: result.secure_url,
-      originalName: result.original_filename ?? file.originalname,
+      originalName: file.originalname,
       publicId: result.public_id,
       mimeType: file.mimetype,
       size: file.size,
@@ -60,12 +72,18 @@ export class PropertyImageService {
     return this.imageRepo.save(image);
   }
 
-  async upload(propertyId: number, file: Express.Multer.File) {
+  async upload(
+    propertyId: number,
+    file: Express.Multer.File,
+    actorId: number,
+    requestCtx: RequestContext,
+    filename?: string,
+  ) {
     let uploadResult: UploadApiResponse | null = null;
 
     try {
       uploadResult = await this.uploadToCloudinary(file);
-      return await this.create(propertyId, uploadResult, file);
+      return await this.create(propertyId, uploadResult, file, filename);
     } catch (error) {
       this.logger.error('Upload image failed', error);
 
@@ -76,6 +94,19 @@ export class PropertyImageService {
           invalidate: true,
         });
       }
+
+      this.eventEmitter.emit(SystemLogEvents.FILE_UPLOAD_FAILED, {
+        action: SystemLogAction.FILE_OPERATION_FAILED,
+        actorId,
+        actorType: SystemLogActorType.USER,
+        targetType: SystemLogTargetType.FILE,
+        targetId: propertyId.toString(),
+        path: requestCtx.path,
+        method: requestCtx.method,
+        statusCode: requestCtx.statusCode,
+      } satisfies ListenerSystemLogPayload);
+
+      this.logger.error(error);
 
       throw error;
     }
@@ -95,7 +126,7 @@ export class PropertyImageService {
     try {
       const image = await this.imageRepo.findOne({
         where: { id: imageId, propertyId },
-        select: ['id', 'publicId'],
+        select: { id: true, publicId: true },
       });
 
       if (!image) throw new NotFoundException('Image not found!');
@@ -106,6 +137,14 @@ export class PropertyImageService {
       });
 
       await this.imageRepo.remove(image);
+
+      const oldValue = {
+        filename: image.filename,
+        size: image.size,
+        propertyId: image.propertyId,
+      };
+
+      return { oldValue };
     } catch (error) {
       this.logger.error(error);
       throw error;

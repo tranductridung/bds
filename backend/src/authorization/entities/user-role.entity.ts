@@ -13,23 +13,23 @@ import { User } from '@/src/user/entities/user.entity';
 @Unique(['role', 'user'])
 export class UserRole {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  roleId: number;
+  roleId!: number;
 
   @Column()
-  userId: number;
+  userId!: number;
 
   @ManyToOne(() => Role, (role) => role.userRoles, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'roleId' })
-  role: Role;
+  role!: Role;
 
   @ManyToOne(() => User, (user) => user.userRoles, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'userId' })
-  user: User;
+  user!: User;
 }

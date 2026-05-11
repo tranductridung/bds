@@ -41,7 +41,7 @@ export class PermissionSeed {
 
     // Get current permission in DB
     const existingPermissions = await this.permissionRepo.find({
-      select: ['key'],
+      select: { key: true },
     });
     const existingKeys = new Set(existingPermissions.map((p) => p.key));
 

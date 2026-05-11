@@ -16,10 +16,10 @@ import { Level } from '../enums/authorization.enum';
 @Unique(['resource', 'action'])
 export class Permission {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  action: string;
+  action!: string;
 
   @BeforeInsert()
   @BeforeUpdate()
@@ -28,7 +28,7 @@ export class Permission {
   }
 
   @Column()
-  resource: string;
+  resource!: string;
 
   @BeforeInsert()
   @BeforeUpdate()
@@ -39,17 +39,17 @@ export class Permission {
   }
 
   @Column()
-  key: string;
+  key!: string;
 
   @Column({ type: 'enum', enum: Level, default: Level.BUSINESS, update: false })
-  level: Level;
+  level!: Level;
 
   @CreateDateColumn({ select: false })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ select: false })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @OneToMany(() => RolePermission, (rp) => rp.permission)
-  rolePermissions: RolePermission[];
+  rolePermissions!: RolePermission[];
 }

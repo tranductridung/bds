@@ -1,12 +1,22 @@
+import {
+  SystemLogAction,
+  SystemLogActorType,
+  SystemLogTargetType,
+} from '../log/enums/system-log.enum';
 import { Job } from 'bullmq';
 import { DataSource } from 'typeorm';
+import { Logger } from '@nestjs/common';
 import { ReminderService } from './reminder.service';
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Reminder } from './entities/reminder.entity';
+import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { normalizeError } from '../common/errors/normalize-error';
 import { NotificationService } from '../notification/notification.service';
+import { SystemLogEvents } from '../log/system-log/events/system-log.event';
 import { NotificationType } from '../notification/enums/notification.enums';
 import { ReminderProcessStatus, ReminderStatus } from './enums/reminder.enum';
 import { CreateNotificationDto } from '../notification/dtos/create-notification.dto';
+import { ListenerSystemLogPayload } from '../log/system-log/events/system-log-events.payload';
 
 export type ReminderJobType = {
   reminderId: number;
@@ -14,10 +24,13 @@ export type ReminderJobType = {
 
 @Processor('reminder')
 export class ReminderProcessor extends WorkerHost {
+  logger = new Logger(ReminderProcessor.name);
+
   constructor(
     private readonly reminderService: ReminderService,
     private readonly notificationService: NotificationService,
     private readonly dataSource: DataSource,
+    private readonly eventEmitter: EventEmitter2,
   ) {
     super();
   }
@@ -79,6 +92,25 @@ export class ReminderProcessor extends WorkerHost {
         await this.reminderService.triggerFailed(reminder);
       }
 
+      const normalizedResult = normalizeError(error);
+
+      this.eventEmitter.emit(SystemLogEvents.JOB_FAILED, {
+        path: undefined,
+        method: undefined,
+        statusCode: normalizedResult.status,
+        action: SystemLogAction.JOB_FAILED,
+        actorId: undefined,
+        actorType: SystemLogActorType.SYSTEM,
+        targetType: SystemLogTargetType.JOB,
+        targetId: undefined,
+        meta: {
+          message: normalizedResult.message,
+          exception: normalizedResult.name,
+          stack: normalizedResult.stack,
+        },
+      } satisfies ListenerSystemLogPayload);
+
+      this.logger.error(error);
       throw error;
     }
   }

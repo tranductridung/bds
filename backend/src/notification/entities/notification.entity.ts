@@ -14,29 +14,29 @@ import { NotificationReceiver } from './notifications_receivers.entity';
 @Entity()
 export class Notification {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ type: 'enum', enum: NotificationType })
-  type: NotificationType;
+  type!: NotificationType;
 
   @Column()
-  title: string;
+  title!: string;
 
   @Column()
-  message: string;
+  message!: string;
 
   @Column({ nullable: true, type: 'enum', enum: NotificationObjectType })
-  objectType: NotificationObjectType | null;
+  objectType!: NotificationObjectType | null;
 
   @Column({ type: 'int', nullable: true })
-  objectId: number | null;
+  objectId!: number | null;
 
   @Column({ type: 'json', nullable: true })
-  meta: Record<string, unknown> | null;
+  meta!: Record<string, unknown> | null;
 
   @CreateDateColumn({ select: false })
-  createdAt: Date;
+  createdAt!: Date;
 
   @OneToMany(() => NotificationReceiver, (un) => un.notification)
-  notificationReceivers: NotificationReceiver[];
+  notificationReceivers!: NotificationReceiver[];
 }

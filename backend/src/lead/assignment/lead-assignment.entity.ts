@@ -13,32 +13,32 @@ import { User } from '@/src/user/entities/user.entity';
 @Entity()
 export class LeadAssignment {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  isPrimary: boolean;
+  isPrimary!: boolean;
 
   @CreateDateColumn({ select: false })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ select: false })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @ManyToOne(() => Lead, (lead) => lead.leadAssignments, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'leadId' })
-  lead: Lead;
+  lead!: Lead;
 
   @ManyToOne(() => User, (user) => user.leadAssignments, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'agentId' })
-  agent: User;
+  agent!: User;
 
   @Column()
-  leadId: number;
+  leadId!: number;
 
   @Column()
-  agentId: number;
+  agentId!: number;
 }

@@ -15,29 +15,29 @@ import { Property } from '../../property/entities/property.entity';
 @Unique(['feature', 'property'])
 export class PropertyFeature {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @CreateDateColumn({ select: false })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ select: false })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @Column()
-  featureId: number;
+  featureId!: number;
 
   @Column()
-  propertyId: number;
+  propertyId!: number;
 
   @ManyToOne(() => Feature, (feature) => feature.propertiesFeatures, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'featureId' })
-  feature: Feature;
+  feature!: Feature;
 
   @ManyToOne(() => Property, (property) => property.propertiesFeatures, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'propertyId' })
-  property: Property;
+  property!: Property;
 }

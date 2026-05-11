@@ -2,17 +2,6 @@ export enum AuditLogAction {
   CREATE = 'CREATE',
   UPDATE = 'UPDATE',
   DELETE = 'DELETE',
-  LOGIN = 'LOGIN',
-  LOGOUT = 'LOGOUT',
-  OTHER = 'OTHER',
-}
-
-export enum SystemLogAction {
-  CREATE = 'CREATE',
-  UPDATE = 'UPDATE',
-  DELETE = 'DELETE',
-  LOGIN = 'LOGIN',
-  LOGOUT = 'LOGOUT',
   OTHER = 'OTHER',
 }
 
@@ -32,6 +21,4 @@ export enum AuditLogTargetType {
 
   TEAM = 'TEAM',
   TEAM_MEMBER = 'TEAM MEMBER',
-
-  NOTIFICATION = 'NOTIFICATION',
 }

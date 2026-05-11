@@ -19,10 +19,10 @@ import { ColumnNumericTransformer } from '@/src/common/transformers/column-numer
 @Entity()
 export class Property {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column('decimal', {
     precision: 15,
@@ -30,10 +30,10 @@ export class Property {
     transformer: new ColumnNumericTransformer(),
     nullable: true,
   })
-  price: number | null;
+  price!: number | null;
 
   @Column()
-  type: string;
+  type!: string;
 
   @Column('decimal', {
     precision: 10,
@@ -41,7 +41,7 @@ export class Property {
     transformer: new ColumnNumericTransformer(),
     nullable: true,
   })
-  latitude: number | null;
+  latitude!: number | null;
 
   @Column('decimal', {
     precision: 10,
@@ -49,40 +49,40 @@ export class Property {
     transformer: new ColumnNumericTransformer(),
     nullable: true,
   })
-  longitude: number | null;
+  longitude!: number | null;
 
   @Column({ type: 'text', nullable: true })
-  description: string | null;
+  description!: string | null;
 
   @Column({
     type: 'enum',
     enum: PropertyBusinessStatus,
     default: PropertyBusinessStatus.AVAILABLE,
   })
-  businessStatus: PropertyBusinessStatus;
+  businessStatus!: PropertyBusinessStatus;
 
   @Column({
     type: 'enum',
     enum: PropertySystemStatus,
     default: PropertySystemStatus.DRAFT,
   })
-  systemStatus: PropertySystemStatus;
+  systemStatus!: PropertySystemStatus;
 
   @CreateDateColumn({ select: false })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ select: false })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @OneToMany(() => PropertyFeature, (pf) => pf.property)
-  propertiesFeatures: PropertyFeature[];
+  propertiesFeatures!: PropertyFeature[];
 
   @OneToMany(() => PropertyAgent, (pa) => pa.property)
-  propertiesAgents: PropertyAgent[];
+  propertiesAgents!: PropertyAgent[];
 
   @OneToMany(() => Rating, (pr) => pr.property)
-  ratings: Rating[];
+  ratings!: Rating[];
 
   @OneToMany(() => PropertyImage, (pr) => pr.property)
-  propertyImages: PropertyImage[];
+  propertyImages!: PropertyImage[];
 }

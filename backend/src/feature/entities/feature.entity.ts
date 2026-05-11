@@ -14,22 +14,22 @@ import { NormalizeTransformer } from '../transformers/transformer-name.transform
 @Entity()
 export class Feature {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column({
     transformer: new NormalizeTransformer(),
   })
-  normalizedName: string;
+  normalizedName!: string;
 
   @CreateDateColumn({ select: false })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ select: false })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @OneToMany(() => PropertyFeature, (pf) => pf.feature)
-  propertiesFeatures: PropertyFeature[];
+  propertiesFeatures!: PropertyFeature[];
 }

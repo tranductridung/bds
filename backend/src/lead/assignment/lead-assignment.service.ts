@@ -11,15 +11,12 @@ import { UserStatus } from '@/src/user/enums/user.enum';
 import { LeadAssignment } from './lead-assignment.entity';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { PaginationDto } from '@/src/common/dtos/pagination.dto';
-import { LeadActivityService } from '../activity/lead-activity.service';
-import { LeadActivityAction, LeadActivityResource } from '../enums/lead.enum';
 
 @Injectable()
 export class LeadAssignmentService {
   constructor(
     @InjectRepository(LeadAssignment)
     private readonly leadAssignmentRepo: Repository<LeadAssignment>,
-    private readonly leadActivityService: LeadActivityService,
     private readonly dataSource: DataSource,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -48,7 +45,7 @@ export class LeadAssignmentService {
           leadId,
           isPrimary: true,
         },
-        relations: ['agent'],
+        relations: { agent: true },
       });
 
       await manager.update(
@@ -68,19 +65,19 @@ export class LeadAssignmentService {
       };
       const newValue = { primaryAgentId: agentId };
 
-      await this.leadActivityService.create(
-        leadId,
-        {
-          action: LeadActivityAction.UPDATE,
-          resource: LeadActivityResource.ASSIGNMENT,
-          resourceId: assignment.id,
-          oldValue,
-          newValue,
-          description: `Change primary agent to user #${agentId}`,
-          performedById: currentUserId,
-        },
-        manager,
-      );
+      // await this.leadActivityService.create(
+      //   leadId,
+      //   {
+      //     action: LeadActivityAction.UPDATE,
+      //     resource: LeadActivityResource.ASSIGNMENT,
+      //     resourceId: assignment.id,
+      //     oldValue,
+      //     newValue,
+      //     description: `Change primary agent to user #${agentId}`,
+      //     performedById: currentUserId,
+      //   },
+      //   manager,
+      // );
 
       this.eventEmitter.emit(LeadEvents.PRIMARY_AGENT_CHANGED, {
         leadId: assignment.leadId,
@@ -139,18 +136,18 @@ export class LeadAssignmentService {
         isPrimary: assignment.isPrimary,
       };
 
-      await this.leadActivityService.create(
-        leadId,
-        {
-          action: LeadActivityAction.CREATE,
-          resource: LeadActivityResource.ASSIGNMENT,
-          newValue,
-          resourceId: assignment.id,
-          description: `Create new assignment for lead #${leadId}`,
-          performedById: currentUserId,
-        },
-        manager,
-      );
+      // await this.leadActivityService.create(
+      //   leadId,
+      //   {
+      //     action: LeadActivityAction.CREATE,
+      //     resource: LeadActivityResource.ASSIGNMENT,
+      //     newValue,
+      //     resourceId: assignment.id,
+      //     description: `Create new assignment for lead #${leadId}`,
+      //     performedById: currentUserId,
+      //   },
+      //   manager,
+      // );
 
       this.eventEmitter.emit(LeadEvents.ASSIGNED, {
         leadId: assignment.leadId,
@@ -192,7 +189,7 @@ export class LeadAssignmentService {
 
     const assignment = await repo.findOne({
       where: { id },
-      relations: ['agent', 'lead'],
+      relations: { agent: true, lead: true },
     });
 
     if (!assignment) throw new NotFoundException('Assignment not found');
@@ -211,7 +208,7 @@ export class LeadAssignmentService {
 
     const assignment = await repo.findOne({
       where: { id: assignmentId, lead: { id: leadId } },
-      relations: ['agent', 'lead'],
+      relations: { agent: true, lead: true },
     });
 
     if (!assignment) throw new NotFoundException('Assignment not found');
@@ -234,18 +231,18 @@ export class LeadAssignmentService {
         isPrimary: assignment.isPrimary,
       };
 
-      await this.leadActivityService.create(
-        leadId,
-        {
-          action: LeadActivityAction.DELETE,
-          resource: LeadActivityResource.ASSIGNMENT,
-          oldValue,
-          resourceId: assignmnetId,
-          description: `Remove assignment of lead #${leadId}`,
-          performedById: currentUserId,
-        },
-        manager,
-      );
+      // await this.leadActivityService.create(
+      //   leadId,
+      //   {
+      //     action: LeadActivityAction.DELETE,
+      //     resource: LeadActivityResource.ASSIGNMENT,
+      //     oldValue,
+      //     resourceId: assignmnetId,
+      //     description: `Remove assignment of lead #${leadId}`,
+      //     performedById: currentUserId,
+      //   },
+      //   manager,
+      // );
 
       this.eventEmitter.emit(LeadEvents.UNASSIGNED, {
         leadId: assignment.leadId,

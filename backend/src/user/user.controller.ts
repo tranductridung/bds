@@ -32,7 +32,7 @@ export class UserController {
 
   @RequirePermissions('user:update')
   @UseGuards(SuperAdminGuard)
-  @Post()
+  @Post(':userId/ban')
   async banUser(
     @Req() req: Request,
     @Body('userId', ParseIntPipe) userId: number,
@@ -42,6 +42,21 @@ export class UserController {
       Number(req?.user?.id),
       userId,
       reason,
+      req.requestContext,
+    );
+    return ResponseService.format(user);
+  }
+
+  @RequirePermissions('user:update')
+  @UseGuards(SuperAdminGuard)
+  @Post(':userId/unban')
+  async unbanUser(
+    @Req() req: Request,
+    @Body('userId', ParseIntPipe) userId: number,
+  ) {
+    const user = await this.userService.unbanUser(
+      Number(req?.user?.id),
+      userId,
     );
     return ResponseService.format(user);
   }

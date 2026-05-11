@@ -4,12 +4,8 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import {
-  LeadStatus,
-  LeadActivityAction,
-  LeadActivityResource,
-} from '../enums/lead.enum';
 import { Lead } from './lead.entity';
+import { LeadStatus } from '../enums/lead.enum';
 import { LeadEvents } from '../events/lead.event';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -20,14 +16,12 @@ import { DataSource, EntityManager, Repository } from 'typeorm';
 import { PaginationDto } from '@/src/common/dtos/pagination.dto';
 import { buildDiff } from '../../common/helpers/build-diff.helper';
 import { LeadAssignment } from '../assignment/lead-assignment.entity';
-import { LeadActivityService } from '../activity/lead-activity.service';
 
 @Injectable()
 export class LeadService {
   constructor(
     @InjectRepository(Lead)
     private readonly leadRepo: Repository<Lead>,
-    private readonly leadActivityService: LeadActivityService,
     private readonly dataSource: DataSource,
     private readonly userService: UserService,
     private readonly eventEmitter: EventEmitter2,
@@ -61,22 +55,22 @@ export class LeadService {
       const lead = manager.create(Lead, createLeadDto);
       await manager.save(lead);
 
-      await this.leadActivityService.create(
-        lead.id,
-        {
-          action: LeadActivityAction.CREATE,
-          resource: LeadActivityResource.LEAD,
-          newValue: {
-            email: lead.email,
-            fullName: lead.fullName,
-            status: lead.status,
-          },
-          resourceId: lead.id,
-          description: 'Create new lead',
-          performedById: currentUserId,
-        },
-        manager,
-      );
+      // await this.leadActivityService.create(
+      //   lead.id,
+      //   {
+      //     action: LeadActivityAction.CREATE,
+      //     resource: LeadActivityResource.LEAD,
+      //     newValue: {
+      //       email: lead.email,
+      //       fullName: lead.fullName,
+      //       status: lead.status,
+      //     },
+      //     resourceId: lead.id,
+      //     description: 'Create new lead',
+      //     performedById: currentUserId,
+      //   },
+      //   manager,
+      // );
 
       return lead;
     });
@@ -155,19 +149,19 @@ export class LeadService {
       await manager.save(lead);
 
       const { oldValue, newValue } = buildDiff(oldLead, lead);
-      await this.leadActivityService.create(
-        lead.id,
-        {
-          action: LeadActivityAction.UPDATE,
-          resource: LeadActivityResource.LEAD,
-          oldValue,
-          newValue,
-          resourceId: lead.id,
-          description: `Update lead #${lead.id}`,
-          performedById: currentUserId,
-        },
-        manager,
-      );
+      // await this.leadActivityService.create(
+      //   lead.id,
+      //   {
+      //     action: LeadActivityAction.UPDATE,
+      //     resource: LeadActivityResource.LEAD,
+      //     oldValue,
+      //     newValue,
+      //     resourceId: lead.id,
+      //     description: `Update lead #${lead.id}`,
+      //     performedById: currentUserId,
+      //   },
+      //   manager,
+      // );
 
       return { lead, oldValue, newValue };
     });
@@ -189,19 +183,19 @@ export class LeadService {
 
       const oldValue = { status: lead.status };
 
-      await this.leadActivityService.create(
-        lead.id,
-        {
-          action: LeadActivityAction.UPDATE,
-          resource: LeadActivityResource.LEAD,
-          oldValue,
-          newValue: { status: newStatus },
-          resourceId: lead.id,
-          description: `Change status lead #${lead.id}`,
-          performedById: currentUserId,
-        },
-        manager,
-      );
+      // await this.leadActivityService.create(
+      //   lead.id,
+      //   {
+      //     action: LeadActivityAction.UPDATE,
+      //     resource: LeadActivityResource.LEAD,
+      //     oldValue,
+      //     newValue: { status: newStatus },
+      //     resourceId: lead.id,
+      //     description: `Change status lead #${lead.id}`,
+      //     performedById: currentUserId,
+      //   },
+      //   manager,
+      // );
 
       lead.status = newStatus;
       await manager.save(Lead, lead);

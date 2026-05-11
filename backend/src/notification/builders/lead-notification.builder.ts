@@ -5,10 +5,10 @@ import {
 import {
   LeadDeletedPayload,
   LeadAssignedPayload,
+  BaseLeadEventPayload,
   LeadUnassignedPayload,
   LeadStatusChangedPayload,
   LeadChangePrimaryAgentPayload,
-  BaseLeadEventPayload,
 } from '@/src/lead/events/lead-core-events.payload';
 import { CreateNotificationDto } from '../dtos/create-notification.dto';
 import { LeadNotificationCode } from '../enums/lead-notification-code.enums';

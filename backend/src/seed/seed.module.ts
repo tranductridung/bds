@@ -7,7 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PermissionSeed } from './permission.seed';
 import { Role } from 'src/authorization/entities/role.entity';
-import { Permission } from 'src/authorization/entities/permission.entity';
+import { Permission } from '../authorization/entities/permission.entity';
 import { RolePermission } from 'src/authorization/entities/role-permission.entity';
 
 @Module({
@@ -19,7 +19,7 @@ import { RolePermission } from 'src/authorization/entities/role-permission.entit
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB,
-      entities: ['../**/*.entity{.ts,.js}'],
+      entities: [__dirname + '/../**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
     TypeOrmModule.forFeature([Role, Permission, RolePermission]),

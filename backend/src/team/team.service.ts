@@ -189,7 +189,7 @@ export class TeamService {
   async getMembersOfTeam(teamId: number) {
     const members = await this.teamMemberRepo.find({
       where: { team: { id: teamId } },
-      relations: ['member'],
+      relations: { member: true },
     });
 
     return members;

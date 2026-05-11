@@ -13,55 +13,55 @@ import { ReminderProcessStatus, ReminderStatus } from '../enums/reminder.enum';
 @Entity()
 export class Reminder {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({
     type: 'enum',
     enum: ReminderStatus,
     default: ReminderStatus.ACTIVE,
   })
-  status: ReminderStatus;
+  status!: ReminderStatus;
 
   @Column({
     type: 'enum',
     enum: ReminderProcessStatus,
     default: ReminderProcessStatus.PENDING,
   })
-  processStatus: ReminderProcessStatus;
+  processStatus!: ReminderProcessStatus;
 
   @Column()
-  title: string;
+  title!: string;
 
   @Column()
-  message: string;
+  message!: string;
 
   @Column()
-  remindAt: Date;
+  remindAt!: Date;
 
   @Column({ type: 'varchar', nullable: true })
-  jobId: string | null;
+  jobId!: string | null;
 
   @CreateDateColumn({ select: false })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ select: false })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @ManyToOne(() => User, (creator) => creator.createdReminders, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'creatorId' })
-  creator: User;
+  creator!: User;
 
   @Column()
-  creatorId: number;
+  creatorId!: number;
 
   @ManyToOne(() => User, (assignee) => assignee.assignedReminders, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'assigneeId' })
-  assignee: User;
+  assignee!: User;
 
   @Column()
-  assigneeId: number;
+  assigneeId!: number;
 }

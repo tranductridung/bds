@@ -14,26 +14,26 @@ import { Property } from './property.entity';
 @Check(`"rating" >= 1 AND "rating" <= 5`)
 export class Rating {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  rating: number;
+  rating!: number;
 
   @Column({ type: 'text', nullable: true })
-  comment: string | null;
+  comment!: string | null;
 
   @CreateDateColumn({ select: false })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ select: false })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @ManyToOne(() => Property, (property) => property.ratings, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'propertyId' })
-  property: Property;
+  property!: Property;
 
   @Column()
-  propertyId: number;
+  propertyId!: number;
 }

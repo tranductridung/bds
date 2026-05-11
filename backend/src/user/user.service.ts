@@ -1,18 +1,17 @@
 import {
   Inject,
+  Logger,
   forwardRef,
   Injectable,
   NotFoundException,
   ConflictException,
   BadRequestException,
   UnauthorizedException,
-  Logger,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { User } from './entities/user.entity';
 import { ConfigService } from '@nestjs/config';
-import { Repository, DataSource } from 'typeorm';
 import { MailService } from '../mail/mail.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserStatus } from '../user/enums/user.enum';
@@ -23,8 +22,17 @@ import { ChangePasswordDTO } from './dto/change-pass.dto';
 import { Role } from '../authorization/entities/role.entity';
 import { PaginationDto } from './../common/dtos/pagination.dto';
 import { AlertEvents } from '../notification/events/alert.events';
+import { Repository, DataSource, LessThanOrEqual } from 'typeorm';
 import { RefreshTokenService } from '../refresh-token/refresh-token.service';
 import { AuthorizationService } from './../authorization/authorization.service';
+import { SystemLogEvents } from '../log/system-log/events/system-log.event';
+import {
+  SystemLogAction,
+  SystemLogActorType,
+  SystemLogTargetType,
+} from '../log/enums/system-log.enum';
+import { RequestContext } from '../common/types/request-context.interface';
+import { ListenerSystemLogPayload } from '../log/system-log/events/system-log-events.payload';
 
 @Injectable()
 export class UserService {
@@ -98,6 +106,7 @@ export class UserService {
       fullName: user.fullName,
       password: user.password,
       status: user.status,
+      lockUntil: user.lockUntil,
       roles: user.userRoles.map((userRole) => userRole.role.name),
     };
   }
@@ -166,7 +175,7 @@ export class UserService {
   async resetPassword(newPassword: string, id: number) {
     const user = await this.userRepo.findOne({
       where: { id, status: UserStatus.ACTIVE },
-      select: ['id', 'password'],
+      select: { id: true, password: true },
     });
 
     if (!user) {
@@ -187,7 +196,7 @@ export class UserService {
     await this.dataSource.transaction(async (manager) => {
       const user = await manager.findOne(User, {
         where: { id: userId },
-        select: ['id', 'password'],
+        select: { id: true, password: true },
       });
 
       if (!user) throw new NotFoundException('User not found!');
@@ -355,12 +364,17 @@ export class UserService {
     };
   }
 
-  async banUser(currentUserId: number, userId: number, reason: string) {
-    if (currentUserId === userId) {
+  async banUser(
+    actorId: number,
+    userId: number,
+    reason: string,
+    requestCtx: RequestContext,
+  ) {
+    if (actorId === userId) {
       throw new BadRequestException('Cannot ban yourself!');
     }
 
-    const user = await this.dataSource.transaction(async (manager) => {
+    await this.dataSource.transaction(async (manager) => {
       const user = await manager.findOne(User, {
         where: { id: userId },
       });
@@ -374,19 +388,108 @@ export class UserService {
       }
 
       user.status = UserStatus.BANNED;
+      user.lockUntil = null;
+      user.failedLoginAttempts = 0;
+
       await manager.save(user);
 
       await this.refreshTokenService.revokeAllTokens(userId, manager);
 
-      return user;
+      this.eventEmitter.emit(SystemLogEvents.AUTH_LOGIN_FAILED, {
+        action: SystemLogAction.AUTHENTICATION_FAILED,
+        actorId,
+        actorType: SystemLogActorType.USER,
+        targetType: SystemLogTargetType.AUTH,
+        targetId: '1',
+        path: requestCtx.path,
+        method: requestCtx.method,
+        statusCode: requestCtx.statusCode,
+      } satisfies ListenerSystemLogPayload);
     });
 
     this.eventEmitter.emit(AlertEvents.AUTHEN_ACCOUNT_BANNED, {
       receiverIds: [userId],
-      actorId: currentUserId,
+      actorId,
       reason: reason.trim(),
     });
+  }
 
-    return user;
+  async unbanUser(currentUserId: number, userId: number) {
+    if (currentUserId === userId) {
+      throw new BadRequestException('Cannot unban yourself!');
+    }
+
+    await this.dataSource.transaction(async (manager) => {
+      const user = await manager.findOne(User, {
+        where: { id: userId },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      if (user.status !== UserStatus.BANNED) {
+        throw new BadRequestException('User not be banned!');
+      }
+
+      user.status = UserStatus.ACTIVE;
+      await manager.save(user);
+      await this.refreshTokenService.revokeAllTokens(userId, manager);
+    });
+  }
+
+  async lockUser(
+    actorId: number,
+    userId: number,
+    lockUntil: Date,
+    requestCtx: RequestContext,
+  ) {
+    await this.dataSource.transaction(async (manager) => {
+      const result = await manager.update(
+        User,
+        { id: userId, status: UserStatus.ACTIVE },
+        {
+          status: UserStatus.LOCKED,
+          lockUntil,
+          failedLoginAttempts: 0,
+        },
+      );
+
+      if (result.affected === 0) {
+        throw new BadRequestException('User cannot be locked');
+      }
+
+      await this.refreshTokenService.revokeAllTokens(userId, manager);
+
+      this.eventEmitter.emit(SystemLogEvents.AUTH_LOGIN_FAILED, {
+        action: SystemLogAction.AUTH_ACCOUNT_LOCKED,
+        actorId: undefined,
+        actorType: SystemLogActorType.SYSTEM,
+        targetType: SystemLogTargetType.AUTH,
+        targetId: userId.toString(),
+        path: requestCtx.path,
+        method: requestCtx.method,
+        statusCode: requestCtx.statusCode,
+      } satisfies ListenerSystemLogPayload);
+    });
+  }
+
+  async unlockUser(userId: number) {
+    const result = await this.userRepo.update(
+      {
+        id: userId,
+        status: UserStatus.LOCKED,
+        lockUntil: LessThanOrEqual(new Date()),
+      },
+      {
+        status: UserStatus.ACTIVE,
+        lockUntil: null,
+        failedLoginAttempts: 0,
+      },
+    );
+
+    if (result.affected === 0) {
+      throw new BadRequestException('User cannot be unlocked yet');
+    }
   }
 }

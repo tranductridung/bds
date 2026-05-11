@@ -14,10 +14,10 @@ import { RolePermission } from './role-permission.entity';
 @Entity()
 export class Role {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ unique: true })
-  name: string;
+  name!: string;
 
   @BeforeInsert()
   @BeforeUpdate()
@@ -26,20 +26,20 @@ export class Role {
   }
 
   @Column({ type: 'text', nullable: true })
-  description: string | null;
+  description!: string | null;
 
   @Column({ default: false })
-  isSystem: boolean;
+  isSystem!: boolean;
 
   @CreateDateColumn({ select: false })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ select: false })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @OneToMany(() => RolePermission, (rp) => rp.role)
-  rolePermissions: RolePermission[];
+  rolePermissions!: RolePermission[];
 
   @OneToMany(() => UserRole, (ur) => ur.role)
-  userRoles: UserRole[];
+  userRoles!: UserRole[];
 }

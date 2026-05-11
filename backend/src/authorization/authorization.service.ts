@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { Role } from './entities/role.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Level } from './enums/authorization.enum';
 import { User } from '../user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -22,7 +23,6 @@ import { CreatePermissionDto } from './dtos/create-permission.dto';
 import { UpdatePermissionDto } from './dtos/update-permission.dto';
 import { RolePermission } from './entities/role-permission.entity';
 import { DataSource, EntityManager, In, Repository } from 'typeorm';
-import { Level } from './enums/authorization.enum';
 
 @Injectable()
 export class AuthorizationService {
@@ -266,7 +266,7 @@ export class AuthorizationService {
       role: { id: roleId },
     });
 
-    this.eventEmitter.emit(AlertEvents.AUTHOR_ROLE_REMOVED, {
+    this.eventEmitter.emit(AlertEvents.AUTHOR_ROLE_UNASSIGNED, {
       receiverIds: [userId],
       actorId: currentUserId,
       oldRole: role.name,
@@ -287,7 +287,7 @@ export class AuthorizationService {
 
     const userRoles = await this.userRoleRepo.find({
       where: { user: { id: userId } },
-      relations: ['role'],
+      relations: { role: true },
     });
 
     return userRoles.map((ur) => ur.role);
@@ -299,7 +299,7 @@ export class AuthorizationService {
     await this.findRole(roleId);
     const rolePermissions = await this.rolePermisisonRepo.find({
       where: { role: { id: roleId } },
-      relations: ['permission'],
+      relations: { permission: true },
     });
     return rolePermissions.map((rp) => rp.permission);
   }
@@ -371,7 +371,7 @@ export class AuthorizationService {
     await this.findRole(roleId);
     const rolePermissions = await this.rolePermisisonRepo.find({
       where: { role: { id: roleId } },
-      relations: ['permission'],
+      relations: { permission: true },
     });
     return rolePermissions.map((rp) => rp.permission);
   }
@@ -397,11 +397,13 @@ export class AuthorizationService {
   async getUserPermissions(userId: number) {
     const userRoles = await this.userRoleRepo.find({
       where: { user: { id: userId } },
-      relations: [
-        'role',
-        'role.rolePermissions',
-        'role.rolePermissions.permission',
-      ],
+      relations: {
+        role: {
+          rolePermissions: {
+            permission: true,
+          },
+        },
+      },
     });
 
     if (!userRoles || userRoles.length === 0) return [];

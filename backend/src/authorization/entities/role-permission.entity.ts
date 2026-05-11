@@ -1,10 +1,10 @@
 import {
+  Column,
   Entity,
   Unique,
   ManyToOne,
   JoinColumn,
   PrimaryGeneratedColumn,
-  Column,
 } from 'typeorm';
 import { Role } from './role.entity';
 import { Permission } from './permission.entity';
@@ -13,23 +13,23 @@ import { Permission } from './permission.entity';
 @Unique(['role', 'permission'])
 export class RolePermission {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  roleId: number;
+  roleId!: number;
 
   @Column()
-  permissionId: number;
+  permissionId!: number;
 
   @ManyToOne(() => Role, (role) => role.rolePermissions, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'roleId' })
-  role: Role;
+  role!: Role;
 
   @ManyToOne(() => Permission, (permission) => permission.rolePermissions, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'permissionId' })
-  permission: Permission;
+  permission!: Permission;
 }

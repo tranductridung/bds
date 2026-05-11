@@ -12,23 +12,23 @@ import { Lead } from '../core/lead.entity';
 @Entity()
 export class LeadNote {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  content: string;
+  content!: string;
 
   @CreateDateColumn({ select: false })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ select: false })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @ManyToOne(() => Lead, (lead) => lead.leadNotes, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'leadId' })
-  lead: Lead;
+  lead!: Lead;
 
   @Column()
-  leadId: number;
+  leadId!: number;
 }

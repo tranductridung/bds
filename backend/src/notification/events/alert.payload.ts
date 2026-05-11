@@ -5,7 +5,11 @@ export interface BaseAlertPayload {
 
 export interface AccountBannedPayload extends BaseAlertPayload {
   reason: string;
-  lockedUntil?: Date;
+}
+
+export interface AccountLockedPayload extends BaseAlertPayload {
+  reason: string;
+  lockedUntil: Date;
 }
 
 export interface RemoveRolePayload extends BaseAlertPayload {

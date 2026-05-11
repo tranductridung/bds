@@ -86,7 +86,13 @@ export class ReminderService {
       where: {
         id: reminderId,
       },
-      select: ['id', 'creatorId', 'status', 'processStatus', 'jobId'],
+      select: {
+        id: true,
+        creatorId: true,
+        status: true,
+        processStatus: true,
+        jobId: true,
+      },
     });
 
     if (!reminder) throw new NotFoundException('Reminder not found');

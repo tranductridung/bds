@@ -13,33 +13,33 @@ import { User } from '@/src/user/entities/user.entity';
 @Unique(['notificationId', 'receiverId'])
 export class NotificationReceiver {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  notificationId: number;
+  notificationId!: number;
 
   @Column()
-  receiverId: number;
+  receiverId!: number;
 
   @Column({ type: 'date', nullable: true, default: null })
-  readAt: Date | null;
+  readAt!: Date | null;
 
   @Column({ type: 'date', nullable: true, default: null })
-  deletedAt: Date | null;
+  deletedAt!: Date | null;
 
   @ManyToOne(
     () => Notification,
     (notification) => notification.notificationReceivers,
     {
       onDelete: 'RESTRICT',
-    },
+    }
   )
   @JoinColumn({ name: 'notificationId' })
-  notification: Notification;
+  notification!: Notification;
 
   @ManyToOne(() => User, (receiver) => receiver.notificationReceivers, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'receiverId' })
-  receiver: User;
+  receiver!: User;
 }

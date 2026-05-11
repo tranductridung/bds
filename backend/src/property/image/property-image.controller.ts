@@ -1,4 +1,5 @@
 import {
+  Req,
   Get,
   Post,
   Param,
@@ -9,9 +10,16 @@ import {
   ParseIntPipe,
   UploadedFile,
   UseInterceptors,
+  Body,
 } from '@nestjs/common';
+import {
+  AuditLogAction,
+  AuditLogTargetType,
+} from '@/src/log/enums/audit-log.enum';
 import * as multer from 'multer';
+import { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { AuditLog } from '@/src/log/decorators/audit.decorator';
 import { PropertyImageService } from './property-image.service';
 import { PaginationDto } from '@/src/common/dtos/pagination.dto';
 import { AuthJwtGuard } from '@/src/authentication/guards/auth.guard';
@@ -42,6 +50,10 @@ export class PropertyImageController {
 
   @RequirePermissions('property:image:create')
   @Post()
+  @AuditLog({
+    action: AuditLogAction.CREATE,
+    targetType: AuditLogTargetType.PROPERTY_IMAGE,
+  })
   @UseInterceptors(
     FileInterceptor('file', {
       storage: multer.memoryStorage(),
@@ -55,19 +67,50 @@ export class PropertyImageController {
     }),
   )
   async uploadImage(
+    @Req() req: Request,
     @Param('propertyId', ParseIntPipe) propertyId: number,
+    @Body('filename') filename: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return await this.imageService.upload(propertyId, file);
+    const image = await this.imageService.upload(
+      propertyId,
+      file,
+      Number(req?.user?.id),
+      req?.requestContext,
+      filename,
+    );
+
+    req.auditPayload = {
+      targetId: image.id,
+      newValue: {
+        filename: image.filename,
+        size: image.size,
+        propertyId: image.propertyId,
+      },
+      description: `Create image ${image.id}`,
+    };
+
+    return image;
   }
 
   @RequirePermissions('property:image:delete')
+  @AuditLog({
+    action: AuditLogAction.DELETE,
+    targetType: AuditLogTargetType.PROPERTY_IMAGE,
+  })
   @Delete(':imageId')
   async removeImage(
+    @Req() req: Request,
     @Param('imageId', ParseIntPipe) imageId: number,
     @Param('propertyId', ParseIntPipe) propertyId: number,
   ) {
-    await this.imageService.remove(propertyId, imageId);
+    const { oldValue } = await this.imageService.remove(propertyId, imageId);
+
+    req.auditPayload = {
+      targetId: imageId,
+      oldValue,
+      description: `Remove rating #${imageId}} of property #${propertyId}`,
+    };
 
     return ResponseService.format({ message: 'Remove image successfully!' });
   }

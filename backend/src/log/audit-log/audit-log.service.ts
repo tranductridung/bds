@@ -81,7 +81,7 @@ export class AuditLogService {
   async findOne(id: number): Promise<AuditLog> {
     const log = await this.auditLogRepo.findOne({
       where: { id },
-      relations: ['actor'],
+      relations: { actor: true },
     });
 
     if (!log) throw new NotFoundException('Log not found');
