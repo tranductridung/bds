@@ -60,7 +60,7 @@ export class AuthorizationService {
       name: createRoleDto.name,
     });
 
-    if (existingRole) throw new ConflictException(`Role existed!`);
+    if (existingRole) throw new ConflictException(`Role already existed!`);
 
     const role = this.roleRepo.create(createRoleDto);
 

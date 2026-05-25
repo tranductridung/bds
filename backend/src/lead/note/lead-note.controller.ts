@@ -29,7 +29,8 @@ import { PermissionsGuard } from 'src/authorization/guards/permission.guard';
 import { SystemUserGuard } from '@/src/authorization/guards/system-user.guard';
 import { AuditInterceptor } from '@/src/log/audit-log/interceptors/audit-log.interceptor';
 import { RequirePermissions } from '../../authentication/decorators/permissions.decorator';
-
+import { ApiBearerAuth } from '@nestjs/swagger';
+@ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @Controller('notes')
 export class NoteController {
@@ -43,7 +44,7 @@ export class NoteController {
     return ResponseService.format(notes, { total });
   }
 }
-
+@ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard, LeadAccessGuard)
 @UseInterceptors(AuditInterceptor)
 @Controller('leads/:leadId/notes')

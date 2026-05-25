@@ -28,7 +28,9 @@ import { SystemUserGuard } from '../authorization/guards/system-user.guard';
 import { PermissionsGuard } from 'src/authorization/guards/permission.guard';
 import { RequirePermissions } from '../authentication/decorators/permissions.decorator';
 import { AuditInterceptor } from '../log/audit-log/interceptors/audit-log.interceptor';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard, SystemUserGuard)
 @UseInterceptors(AuditInterceptor)
 @Controller('features')

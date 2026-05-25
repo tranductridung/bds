@@ -1,139 +1,120 @@
-﻿# BDS Backend
+# FirstHome Backend
 
-A NestJS-based backend API for the real estate project. This repository powers user management, authentication, authorization, notifications, reminders, property management, lead handling, and logging.
+A NestJS-based backend for the BDS platform. Provides authentication, authorization,
+notifications, property and lead management, file uploads (Cloudinary), Redis-backed
+rate limiting and caching, cron jobs, email sending, and database seeding utilities.
 
-## Key Features
+## Features
 
-- Authentication and authorization with JWT and role-based control
-- User, team, lead, feature, property, and rating management
-- Scheduled reminders and cron jobs
-- Email support via Nodemailer
-- Cloudinary integration for image handling
-- Redis-based rate limiting and BullMQ background queue support
-- MySQL persistence via TypeORM
-- Event-driven domain actions with NestJS EventEmitter
-- Audit and system logging
+- Authentication (JWT, refresh tokens)
+- Authorization (role/permission guards)
+- Notifications & event listeners
+- Property, Lead, Feature modules with DTOs and entities
+- Cloudinary integration for image uploads
+- Redis for caching and rate-limiting
+- Cron jobs for reminders and token cleanup
+- Mail service for outgoing emails
+- DB seeding scripts for initial data (permissions, roles, etc.)
 
-## Technology Stack
+## Tech Stack
 
-- Node.js
-- TypeScript
+- Node.js, TypeScript
 - NestJS
-- MySQL / TypeORM
+- PostgreSQL / TypeORM (or your chosen ORM)
 - Redis
-- BullMQ
 - Cloudinary
-- Jest for testing
-- ESLint + Prettier for code quality
+- Docker & docker-compose
 
-## Repository Layout
+## Prerequisites
 
-- `backend/` - main NestJS application
-  - `src/` - application source code
-  - `test/` - end-to-end tests
-  - `package.json` - npm scripts and dependencies
-  - `tsconfig.json` / `tsconfig.build.json` - TypeScript configuration
+- Node.js 18+ (recommended)
+- npm or yarn
+- Docker & docker-compose (for containerized run)
+- A running PostgreSQL and Redis instance (or use docker-compose)
 
-## Project Status
+## Getting Started
 
-- This is a personal project and is currently a work in progress.
-- The backend is not deployed to a production environment.
-- The code is prepared for cloud deployment or containerization if needed.
-- Improvements are ongoing, especially around feature completion, stability, and production readiness.
-
-## Getting Started 
-
-### Prerequisites
-
-- Node.js 20+ or compatible version
-- npm
-- MySQL server
-- Redis server
-- Optional: Cloudinary account for image uploads
-
-### Install dependencies
-
-Open a terminal in `backend/` and run:
+1. Install dependencies
 
 ```bash
 cd backend
 npm install
+# or `yarn`
 ```
 
-### Environment Variables
+2. Copy and configure environment variables
 
-Create a `.env` file in `backend/` with the values needed for your environment. Common variables include:
+Create a `.env` in `backend/` (or set env vars in your environment). Typical keys:
 
-```env
-DB_HOST=localhost
-DB_PORT=3306
-DB_USERNAME=root
-DB_PASSWORD=your_password
-DB=your_database
-JWT_SECRET=your_jwt_secret
-REDIS_HOST=localhost
-REDIS_PORT=6379
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-MAIL_HOST=smtp.example.com
-MAIL_PORT=587
-MAIL_USER=your_email
-MAIL_PASSWORD=your_password
+- `DATABASE_URL` — database connection string
+- `REDIS_URL` — Redis connection string
+- `JWT_SECRET` — JWT signing secret
+- `JWT_REFRESH_SECRET` — refresh token secret
+- `CLOUDINARY_URL` — Cloudinary config URL
+- `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASS` — mailer settings
+
+3. Run migrations / seed (if applicable)
+
+```bash
+# build & run seed script (project may expose a seed npm script)
+npm run build
+npm run seed
 ```
 
-> Note: The app currently configures TypeORM and BullMQ using environment variables and defaults for local Redis connection.
-
-## Run the Application
-
-From the `backend/` directory:
+4. Start in development
 
 ```bash
 npm run start:dev
 ```
 
-Available scripts:
-
-- `npm run start` - start the server
-- `npm run start:dev` - start in watch mode
-- `npm run start:debug` - start with debugger enabled
-- `npm run start:prod` - start production build from `dist`
-
-## Build
+Or run with Docker Compose from the repository root:
 
 ```bash
-npm run build
+docker-compose up --build
 ```
 
-## Testing
+## Scripts (common)
 
-```bash
-npm run test
-npm run test:e2e
-npm run test:cov
-```
+- `npm run start` — start production build
+- `npm run start:dev` — start in development with hot-reload
+- `npm run build` — compile TypeScript
+- `npm run test` — run tests
+- `npm run lint` — run linter
+- `npm run seed` — run DB seed scripts (if available)
 
-## Code Quality
+Check `backend/package.json` for exact script names.
 
-```bash
-npm run lint
-npm run format
-```
+## Environment Notes
 
-## Seed Data
+- Keep secrets out of version control. Use `.env` (not committed) or a secret manager.
+- When deploying, ensure `NODE_ENV=production` and that secrets are provided securely.
 
-Seed scripts are available under `backend/src/seed`. Run:
+## Development Notes
 
-```bash
-npm run seed
-```
+- Code lives in `backend/src/` and is organized by feature/module.
+- Tests are under `test/` and `backend/src/*.spec.ts` for unit tests.
+- Use the existing DTOs, guards and interceptors when adding new endpoints.
 
-## Notes
+## Seeding
 
-- `AppModule` registers several domain modules including authentication, authorization, users, teams, leads, properties, reminders, notifications, and logging.
-- The application uses `synchronize: true` in TypeORM for development convenience. For production, review and disable automatic schema sync.
-- The backend is designed to be extended with frontend or mobile clients via HTTP APIs.
+The repository contains seed scripts under `backend/src/seed/` to populate initial
+permissions and other base data. Run the seed script after connecting to the database.
+
+## Contributing
+
+- Fork the repo and create a feature branch.
+- Run tests and linters before opening a PR.
+- Include clear descriptions and related issue references in PRs.
+
+## Troubleshooting
+
+- If migrations fail, verify `DATABASE_URL` and that the DB user has permissions.
+- For Cloudinary issues, confirm `CLOUDINARY_URL` environment variable is valid.
 
 ## License
 
-This project is currently marked as private/unlicensed in `backend/package.json`.
+This project is provided as-is. Add a `LICENSE` file to declare an open-source license.
+
+## Contact
+
+For questions, open an issue in this repository or contact the maintainers.

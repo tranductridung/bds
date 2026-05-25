@@ -19,6 +19,7 @@ import {
 import { Request } from 'express';
 import { LeadService } from './lead.service';
 import { LeadStatus } from '../enums/lead.enum';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
 import { LeadAccessGuard } from '../guards/lead.guard';
@@ -32,7 +33,7 @@ import { SystemUserGuard } from '@/src/authorization/guards/system-user.guard';
 import { PermissionsGuard } from '@/src/authorization/guards/permission.guard';
 import { AuditInterceptor } from '@/src/log/audit-log/interceptors/audit-log.interceptor';
 import { RequirePermissions } from '@/src/authentication/decorators/permissions.decorator';
-
+@ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @UseInterceptors(AuditInterceptor)
 @Controller('leads')

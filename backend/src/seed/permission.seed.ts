@@ -18,8 +18,6 @@ export class PermissionSeed {
     const resources = [
       'authorization',
       'user',
-      'team',
-      'team:member',
 
       'property',
       'property:agent',

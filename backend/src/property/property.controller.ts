@@ -32,7 +32,9 @@ import { SystemUserGuard } from '../authorization/guards/system-user.guard';
 import { PermissionsGuard } from 'src/authorization/guards/permission.guard';
 import { PropertySystemUserGuard } from './guards/property-system-user.guard';
 import { RequirePermissions } from '../authentication/decorators/permissions.decorator';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @Controller('properties')
 export class PropertyController {

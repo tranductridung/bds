@@ -24,7 +24,9 @@ import { ResponseService } from '@/src/common/helpers/response.service';
 import { PropertySystemUserGuard } from '../guards/property-system-user.guard';
 import { PermissionsGuard } from '@/src/authorization/guards/permission.guard';
 import { RequirePermissions } from '@/src/authentication/decorators/permissions.decorator';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @Controller('properties/:propertyId/agents')
 export class PropertyAgentController {

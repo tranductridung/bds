@@ -23,7 +23,9 @@ import { AuthJwtGuard } from '@/src/authentication/guards/auth.guard';
 import { ResponseService } from '@/src/common/helpers/response.service';
 import { PermissionsGuard } from '@/src/authorization/guards/permission.guard';
 import { RequirePermissions } from '@/src/authentication/decorators/permissions.decorator';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard, PropertyAccessGuard)
 @Controller('properties/:propertyId/features')
 export class PropertyFeatureController {

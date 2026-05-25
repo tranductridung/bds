@@ -9,7 +9,6 @@ import {
 import { IsEnum } from 'class-validator';
 import { UserStatus, Gender } from '../enums/user.enum';
 import { Reminder } from '@/src/reminder/entities/reminder.entity';
-import { TeamMember } from '@/src/team/entities/team-members.entity';
 import { UserRole } from 'src/authorization/entities/user-role.entity';
 import { AuditLog } from '@/src/log/audit-log/entities/audit-log.entity';
 import { SystemLog } from '@/src/log/system-log/entities/system-log.entity';
@@ -74,9 +73,6 @@ export class User {
 
   @OneToMany(() => UserRole, (ur) => ur.user)
   userRoles!: UserRole[];
-
-  @OneToMany(() => TeamMember, (tm) => tm.member)
-  teamMember!: TeamMember[];
 
   @OneToMany(() => PropertyAgent, (pa) => pa.agent)
   propertiesAgents!: PropertyAgent[];

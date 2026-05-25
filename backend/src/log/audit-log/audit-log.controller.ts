@@ -13,7 +13,9 @@ import { ResponseService } from '@/src/common/helpers/response.service';
 import { PermissionsGuard } from '@/src/authorization/guards/permission.guard';
 import { SystemUserGuard } from '@/src/authorization/guards/system-user.guard';
 import { RequirePermissions } from '@/src/authentication/decorators/permissions.decorator';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard, SystemUserGuard)
 @RequirePermissions('log:audit:read')
 @Controller('logs/audits')

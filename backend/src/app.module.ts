@@ -3,7 +3,6 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppService } from './app.service';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule } from '@nestjs/config';
-import { TeamModule } from './team/team.module';
 import { UserModule } from './user/user.module';
 import { LeadModule } from './lead/lead.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -33,11 +32,11 @@ import { AuthenticationModule } from './authentication/authentication.module';
     }),
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT),
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB,
+      host: process.env.MYSQL_HOST,
+      port: Number(process.env.MYSQL_PORT),
+      username: process.env.MYSQL_USERNAME,
+      password: process.env.MYSQL_ROOT_PASSWORD,
+      database: process.env.MYSQL_DATABASE,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
@@ -52,12 +51,11 @@ import { AuthenticationModule } from './authentication/authentication.module';
     }),
     BullModule.forRoot({
       connection: {
-        host: 'localhost',
-        port: 6379,
+        host: process.env.REDIS_HOST || 'localhost',
+        port: Number(process.env.REDIS_PORT) || 6379,
       },
     }),
     UserModule,
-    TeamModule,
     RatingModule,
     FeatureModule,
     PropertyModule,

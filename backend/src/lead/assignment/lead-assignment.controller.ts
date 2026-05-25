@@ -27,7 +27,8 @@ import { PermissionsGuard } from 'src/authorization/guards/permission.guard';
 import { SystemUserGuard } from '@/src/authorization/guards/system-user.guard';
 import { RequirePermissions } from '../../authentication/decorators/permissions.decorator';
 import { AuditInterceptor } from '@/src/log/audit-log/interceptors/audit-log.interceptor';
-
+import { ApiBearerAuth } from '@nestjs/swagger';
+@ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard, SystemUserGuard)
 @Controller('assignments')
 export class AssignmentController {
@@ -42,6 +43,7 @@ export class AssignmentController {
   }
 }
 
+@ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @UseInterceptors(AuditInterceptor)
 @Controller('leads/:leadId/assignments')

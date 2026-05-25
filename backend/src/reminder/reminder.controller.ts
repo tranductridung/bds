@@ -21,7 +21,8 @@ import { CreateSelfReminderDto } from './dto/create-self-reminder.dto';
 import { SuperAdminGuard } from '../authorization/guards/superadmin.guard';
 import { PermissionsGuard } from '../authorization/guards/permission.guard';
 import { CreateReminderForUserDto } from './dto/create-reminder-for-user.dto';
-
+import { ApiBearerAuth } from '@nestjs/swagger';
+@ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @Controller('reminders')
 export class ReminderController {

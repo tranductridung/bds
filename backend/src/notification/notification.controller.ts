@@ -11,6 +11,7 @@ import {
   Res,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { NotificationService } from './notification.service';
 import { PaginationDto } from '../common/dtos/pagination.dto';
 import { AuthJwtGuard } from '../authentication/guards/auth.guard';
@@ -20,6 +21,7 @@ import { PermissionsGuard } from '../authorization/guards/permission.guard';
 import { RequirePermissions } from '../authentication/decorators/permissions.decorator';
 import { RefreshTokenService } from '../refresh-token/refresh-token.service';
 
+@ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @Controller('notifications')
 export class NotificationController {

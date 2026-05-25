@@ -14,6 +14,7 @@ import {
 import { Request } from 'express';
 import { UserService } from './user.service';
 import { UserStatus } from './enums/user.enum';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDTO } from './dto/change-pass.dto';
@@ -25,6 +26,7 @@ import { PermissionsGuard } from 'src/authorization/guards/permission.guard';
 import { UserPayload } from '../authentication/interfaces/user-payload.interface';
 import { RequirePermissions } from '../authentication/decorators/permissions.decorator';
 
+@ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @Controller('users')
 export class UserController {
