@@ -3,6 +3,7 @@ import {
   CanActivate,
   HttpException,
   ExecutionContext,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   RATE_LIMIT,
@@ -22,6 +23,10 @@ export class RateLimitGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext) {
+    if (this.configService.get('RATE_LIMIT_ENABLED') === 'false') {
+      return true;
+    }
+
     const req: Request = context.switchToHttp().getRequest();
 
     const config: RateLimitConfigType = this.reflector.getAllAndOverride(
@@ -32,19 +37,18 @@ export class RateLimitGuard implements CanActivate {
       ttl: Number(this.configService.get<string>('RATE_LIMIT_TTL_DEFAULT')),
     };
 
-    const forwarded = req.get('x-forwarded-for');
-    const ip = forwarded?.split(',')[0].trim() || req.ip;
+    const ip = req.ip ?? req.socket.remoteAddress ?? 'unknown';
+    const routeId = `${context.getClass().name}.${context.getHandler().name}`;
+    const prefix = this.configService.get<string>('REDIS_KEY_PREFIX') ?? 'app';
+    const key = `${prefix}:rate-limit:${routeId}:ip:${ip}`;
 
-    const key = `rate-limit:${ip}`;
+    const result = await this.redisService.incrWithTtl(key, config.ttl);
 
-    const increasedValue = await this.redisService.incr(key);
-
-    if (increasedValue === 1) {
-      await this.redisService.expire(key, config.ttl);
-    }
-
-    if (increasedValue > config.limit) {
-      throw new HttpException('Too Many Requests', 429);
+    if (result.count > config.limit) {
+      throw new HttpException(
+        'Too Many Requests',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
 
     return true;
