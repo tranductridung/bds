@@ -8,7 +8,7 @@ import { setupApp } from './setup-app';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   // app.use(cookieParser());
-  // app.set('trust proxy', true);  
+  // app.set('trust proxy', true);
   // app.setGlobalPrefix('api/v1');
   // app.useGlobalInterceptors(app.get(AuditInterceptor));
   // app.useGlobalPipes(
@@ -59,7 +59,6 @@ Use the "Authorize" button to enter a bearer token and test protected endpoints.
     )
 
     // ─── Servers ───────────────────────────────────────────────────────
-    .addServer('http://localhost:3000', 'Local Development')
 
     // ─── Security Schemes ──────────────────────────────────────────────
     .addBearerAuth(

@@ -26,7 +26,6 @@ export function setupApp(app: NestExpressApplication) {
   app.enableCors({
     origin: [
       process.env.FRONTEND_URL || 'http://localhost:5173',
-      process.env.BACKEND_URL || 'http://localhost:3000',
       /https:\/\/.*\.vercel\.app$/,
     ],
     credentials: true,
