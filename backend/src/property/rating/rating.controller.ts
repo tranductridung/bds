@@ -29,8 +29,18 @@ import { PermissionsGuard } from 'src/authorization/guards/permission.guard';
 import { SystemUserGuard } from '@/src/authorization/guards/system-user.guard';
 import { AuditInterceptor } from '@/src/log/audit-log/interceptors/audit-log.interceptor';
 import { RequirePermissions } from '../../authentication/decorators/permissions.decorator';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiBody,
+  ApiParam,
+  ApiOkResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
+import { ApiErrorsOld } from '@/src/common/decorators/error-response.decorator';
 
+@ApiTags('Ratings')
 @ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @Controller('ratings')
@@ -39,6 +49,10 @@ export class RatingController {
 
   @RequirePermissions('property:rating:read')
   @UseGuards(SystemUserGuard)
+  @ApiOperation({ summary: 'List all ratings with pagination' })
+  @ApiQuery({ name: 'page', required: false, type: 'number' })
+  @ApiQuery({ name: 'limit', required: false, type: 'number' })
+  @ApiOkResponse({ description: 'Ratings retrieved successfully' })
   @Get()
   async findAll(@Query() paginationDto: PaginationDto) {
     const { ratings, total } = await this.ratingService.findAll(paginationDto);
@@ -46,6 +60,8 @@ export class RatingController {
   }
 }
 
+@ApiTags('Property Ratings')
+@ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard, PropertyAccessGuard)
 @UseInterceptors(AuditInterceptor)
 @Controller('properties/:propertyId/ratings')
@@ -53,6 +69,11 @@ export class PropertyRatingController {
   constructor(private readonly ratingService: RatingService) {}
 
   @RequirePermissions('property:rating:create')
+  @ApiOperation({ summary: 'Create a new rating for a property' })
+  @ApiParam({ name: 'propertyId', description: 'Property ID', type: 'number' })
+  @ApiBody({ type: CreateRatingDto })
+  @ApiOkResponse({ description: 'Rating created successfully' })
+  @ApiErrorsOld(400, 404)
   @Post()
   @AuditLog({
     action: AuditLogAction.CREATE,
@@ -78,6 +99,11 @@ export class PropertyRatingController {
   }
 
   @RequirePermissions('property:rating:read')
+  @ApiOperation({ summary: 'List all ratings for a property' })
+  @ApiParam({ name: 'propertyId', description: 'Property ID', type: 'number' })
+  @ApiQuery({ name: 'page', required: false, type: 'number' })
+  @ApiQuery({ name: 'limit', required: false, type: 'number' })
+  @ApiOkResponse({ description: 'Property ratings retrieved successfully' })
   @Get()
   async findAllRatingsOfProperty(
     @Param('propertyId', ParseIntPipe) propertyId: number,
@@ -91,6 +117,12 @@ export class PropertyRatingController {
   }
 
   @RequirePermissions('property:rating:update')
+  @ApiOperation({ summary: 'Update a property rating' })
+  @ApiParam({ name: 'propertyId', description: 'Property ID', type: 'number' })
+  @ApiParam({ name: 'ratingId', description: 'Rating ID', type: 'number' })
+  @ApiBody({ type: UpdateRatingDto })
+  @ApiOkResponse({ description: 'Rating updated successfully' })
+  @ApiErrorsOld(400, 404)
   @Patch(':ratingId')
   @AuditLog({
     action: AuditLogAction.UPDATE,

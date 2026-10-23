@@ -24,11 +24,17 @@ import { AuthorizationModule } from './authorization/authorization.module';
 import { PropertyImageModule } from './property/image/property-image.module';
 import { PropertyAgentModule } from './property/agent/property-agent.module';
 import { AuthenticationModule } from './authentication/authentication.module';
+import { AllExceptionsFilter } from './common/filters/app-exception.filter';
+import { SeedModule } from './seed/seed.module';
+import { envValidationSchema } from './config/env.validation';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      validationSchema: envValidationSchema,
+      validationOptions: { abortEarly: false },
     }),
     TypeOrmModule.forRoot({
       type: 'mysql',
@@ -63,6 +69,8 @@ import { AuthenticationModule } from './authentication/authentication.module';
     RefreshTokenModule,
     AuthorizationModule,
     AuthenticationModule,
+    SeedModule,
+    HealthModule,
     PropertyImageModule,
     PropertyAgentModule,
     AuthenticationModule,
@@ -77,6 +85,7 @@ import { AuthenticationModule } from './authentication/authentication.module';
   controllers: [AppController],
   providers: [
     AppService,
+    AllExceptionsFilter,
     RedisService,
     { provide: APP_GUARD, useClass: RateLimitGuard },
   ],

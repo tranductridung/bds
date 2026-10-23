@@ -3,6 +3,7 @@ import {
   HttpException,
   ArgumentsHost,
   ExceptionFilter,
+  ConflictException,
   ForbiddenException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -73,6 +74,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
         targetId: undefined,
         meta: { exception: exception.name },
       } satisfies ListenerSystemLogPayload);
+    } else if (exception instanceof ConflictException) {
+      this.eventEmitter.emit(SystemLogEvents.SECURITY_RATE_LIMIT_EXCEEDED, {
+        ...basePayload,
+        action: SystemLogAction.SECURITY_RATE_LIMIT_EXCEEDED,
+        actorId,
+        actorType: actorId
+          ? SystemLogActorType.USER
+          : SystemLogActorType.ANONYMOUS,
+        targetType: SystemLogTargetType.REDIS,
+        targetId: undefined,
+        meta: { exception: exception.name },
+      } satisfies ListenerSystemLogPayload);
     } else if (status >= 500) {
       this.eventEmitter.emit(SystemLogEvents.SYSTEM_UNHANDLED_EXCEPTION, {
         ...basePayload,
@@ -87,12 +100,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
       } satisfies ListenerSystemLogPayload);
     }
 
-    res.status(status).json({
-      statusCode: status,
-      message:
-        exception instanceof HttpException
-          ? exception.getResponse()
-          : 'Internal server error',
-    });
+    res.status(status).json(
+      exception instanceof HttpException
+        ? exception.getResponse()
+        : {
+            message: 'Internal server error',
+            error: 'Internal server error',
+            statusCode: 500,
+          },
+    );
   }
 }

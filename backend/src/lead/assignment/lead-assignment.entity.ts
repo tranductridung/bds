@@ -18,10 +18,10 @@ export class LeadAssignment {
   @Column()
   isPrimary!: boolean;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn()
   createdAt!: Date;
 
-  @UpdateDateColumn({ select: false })
+  @UpdateDateColumn()
   updatedAt!: Date;
 
   @ManyToOne(() => Lead, (lead) => lead.leadAssignments, {

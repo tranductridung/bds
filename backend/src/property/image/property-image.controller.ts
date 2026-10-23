@@ -28,8 +28,17 @@ import { ResponseService } from '@/src/common/helpers/response.service';
 import { PermissionsGuard } from '@/src/authorization/guards/permission.guard';
 import { SystemUserGuard } from '@/src/authorization/guards/system-user.guard';
 import { RequirePermissions } from '@/src/authentication/decorators/permissions.decorator';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiParam,
+  ApiOkResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
+import { ApiErrorsOld } from '@/src/common/decorators/error-response.decorator';
 
+@ApiTags('Property Images')
 @ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @Controller('images')
@@ -38,6 +47,10 @@ export class ImageController {
 
   @RequirePermissions('property:image:read')
   @UseGuards(SystemUserGuard)
+  @ApiOperation({ summary: 'List all property images with pagination' })
+  @ApiQuery({ name: 'page', required: false, type: 'number' })
+  @ApiQuery({ name: 'limit', required: false, type: 'number' })
+  @ApiOkResponse({ description: 'Images retrieved successfully' })
   @Get()
   async findAll(@Query() paginationDto: PaginationDto) {
     const { images, total } = await this.imageService.findAll(paginationDto);
@@ -45,6 +58,7 @@ export class ImageController {
   }
 }
 
+@ApiTags('Property Images Management')
 @ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard, PropertyAccessGuard)
 @Controller('properties/:propertyId/images')
@@ -52,6 +66,10 @@ export class PropertyImageController {
   constructor(private readonly imageService: PropertyImageService) {}
 
   @RequirePermissions('property:image:create')
+  @ApiOperation({ summary: 'Upload an image for a property' })
+  @ApiParam({ name: 'propertyId', description: 'Property ID', type: 'number' })
+  @ApiOkResponse({ description: 'Image uploaded successfully' })
+  @ApiErrorsOld(400, 404)
   @Post()
   @AuditLog({
     action: AuditLogAction.CREATE,
@@ -97,6 +115,11 @@ export class PropertyImageController {
   }
 
   @RequirePermissions('property:image:delete')
+  @ApiOperation({ summary: 'Delete a property image' })
+  @ApiParam({ name: 'propertyId', description: 'Property ID', type: 'number' })
+  @ApiParam({ name: 'imageId', description: 'Image ID', type: 'number' })
+  @ApiOkResponse({ description: 'Image deleted successfully' })
+  @ApiErrorsOld(404)
   @AuditLog({
     action: AuditLogAction.DELETE,
     targetType: AuditLogTargetType.PROPERTY_IMAGE,

@@ -26,5 +26,6 @@ import { RolePermission } from 'src/authorization/entities/role-permission.entit
     ConfigModule,
   ],
   providers: [SeedService, RoleSeed, PermissionSeed, UserSeed],
+  exports: [SeedService, RoleSeed, PermissionSeed, UserSeed],
 })
 export class SeedModule {}

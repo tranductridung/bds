@@ -8,7 +8,16 @@ import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserService } from '../user/user.service';
-import { EntityManager, Repository } from 'typeorm';
+import {
+  And,
+  EntityManager,
+  IsNull,
+  LessThan,
+  MoreThan,
+  Not,
+  Or,
+  Repository,
+} from 'typeorm';
 import { RefreshToken } from './entities/refresh-token.entity';
 
 @Injectable()
@@ -52,9 +61,11 @@ export class RefreshTokenService {
   }
 
   async revokeToken(refreshToken: string, userId: number) {
+    console.log(refreshToken, userId);
     const tokens = await this.tokenRepository.find({
       where: { user: { id: userId } },
     });
+    console.log(tokens);
 
     for (const token of tokens) {
       if (await bcrypt.compare(refreshToken, token.hashedToken)) {
@@ -82,13 +93,33 @@ export class RefreshTokenService {
     await this.tokenRepository.update(id, { revokedAt: new Date() });
   }
 
-  async isTokenExist(refreshToken: string, userId: number) {
+  // async isTokenExist(refreshToken: string, userId: number) {
+  //   const tokens = await this.tokenRepository.find({
+  //     where: { user: { id: userId }, revokedAt: LessThan(new Date()) },
+  //   });
+
+  //   for (const token of tokens) {
+  //     if (await bcrypt.compare(refreshToken, token.hashedToken)) return true;
+  //   }
+
+  //   return false;
+  // }
+
+  async isTokenExist(refreshToken: string, userId: number): Promise<boolean> {
+    if (!refreshToken) return false;
+
     const tokens = await this.tokenRepository.find({
-      where: { user: { id: userId } },
+      where: {
+        user: { id: userId },
+        revokedAt: IsNull(), // not revoke yet
+        expiredAt: MoreThan(new Date()), // not expired
+      },
     });
 
     for (const token of tokens) {
-      if (await bcrypt.compare(refreshToken, token.hashedToken)) return true;
+      if (await bcrypt.compare(refreshToken, token.hashedToken)) {
+        return true;
+      }
     }
 
     return false;

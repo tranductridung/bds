@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
 import { Gender } from '../enums/user.enum';
 import { CreateUserDTO } from './create-user.dto';
-import { OmitType, PartialType } from '@nestjs/mapped-types';
+import { OmitType, PartialType } from '@nestjs/swagger';
 import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 

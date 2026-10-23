@@ -23,8 +23,18 @@ import { AuthJwtGuard } from '@/src/authentication/guards/auth.guard';
 import { ResponseService } from '@/src/common/helpers/response.service';
 import { PermissionsGuard } from '@/src/authorization/guards/permission.guard';
 import { RequirePermissions } from '@/src/authentication/decorators/permissions.decorator';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiParam,
+  ApiBody,
+  ApiOkResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
+import { ApiErrorsOld } from '@/src/common/decorators/error-response.decorator';
 
+@ApiTags('Property Features')
 @ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard, PropertyAccessGuard)
 @Controller('properties/:propertyId/features')
@@ -34,6 +44,11 @@ export class PropertyFeatureController {
   ) {}
 
   @RequirePermissions('property:feature:create')
+  @ApiOperation({ summary: 'Add a feature to a property' })
+  @ApiParam({ name: 'propertyId', description: 'Property ID', type: 'number' })
+  @ApiBody({ schema: { properties: { featureId: { type: 'number' } } } })
+  @ApiOkResponse({ description: 'Feature added to property successfully' })
+  @ApiErrorsOld(400, 404)
   @Post()
   @AuditLog({
     action: AuditLogAction.CREATE,
@@ -60,6 +75,12 @@ export class PropertyFeatureController {
   }
 
   @RequirePermissions('property:feature:read')
+  @ApiOperation({ summary: 'Get all features for a property' })
+  @ApiParam({ name: 'propertyId', description: 'Property ID', type: 'number' })
+  @ApiQuery({ name: 'page', required: false, type: 'number' })
+  @ApiQuery({ name: 'limit', required: false, type: 'number' })
+  @ApiOkResponse({ description: 'Property features retrieved successfully' })
+  @ApiErrorsOld(404)
   @Get()
   async getFeaturesOfProperty(
     @Param('propertyId', ParseIntPipe) propertyId: number,
@@ -74,6 +95,11 @@ export class PropertyFeatureController {
   }
 
   @RequirePermissions('property:feature:delete')
+  @ApiOperation({ summary: 'Remove a feature from a property' })
+  @ApiParam({ name: 'propertyId', description: 'Property ID', type: 'number' })
+  @ApiParam({ name: 'featureId', description: 'Feature ID', type: 'number' })
+  @ApiOkResponse({ description: 'Feature removed from property successfully' })
+  @ApiErrorsOld(404)
   @Delete(':featureId')
   @AuditLog({
     action: AuditLogAction.DELETE,

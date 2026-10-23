@@ -38,10 +38,10 @@ export class PropertyImage {
   @Column()
   height!: number;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn()
   createdAt!: Date;
 
-  @UpdateDateColumn({ select: false })
+  @UpdateDateColumn()
   updatedAt!: Date;
 
   @ManyToOne(() => Property, (property) => property.propertyImages, {

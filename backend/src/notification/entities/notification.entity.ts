@@ -34,7 +34,7 @@ export class Notification {
   @Column({ type: 'json', nullable: true })
   meta!: Record<string, unknown> | null;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn()
   createdAt!: Date;
 
   @OneToMany(() => NotificationReceiver, (un) => un.notification)

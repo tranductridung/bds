@@ -13,44 +13,44 @@ import { ActivityValue } from '@/src/lead/types/activity-json.type';
 @Entity()
 export class AuditLog {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({
     type: 'enum',
     enum: AuditLogAction,
   })
-  action: AuditLogAction;
+  action!: AuditLogAction;
 
   @Column()
-  targetType: string;
+  targetType!: string;
 
   @Column()
-  targetId: number;
+  targetId!: number;
 
   @Column({ type: 'json', nullable: true })
-  oldValue: ActivityValue | null;
+  oldValue!: ActivityValue | null;
 
   @Column({ type: 'json', nullable: true })
-  newValue: ActivityValue | null;
+  newValue!: ActivityValue | null;
 
   @Column({ type: 'text', nullable: true })
-  description: string | null;
+  description!: string | null;
 
   @Column({ type: 'varchar', nullable: true })
-  ip: string | null;
+  ip!: string | null;
 
   @Column({ type: 'varchar', nullable: true })
-  userAgent: string | null;
+  userAgent!: string | null;
 
-  @CreateDateColumn({ select: false })
-  createdAt: Date;
+  @CreateDateColumn()
+  createdAt!: Date;
 
   @ManyToOne(() => User, {
     onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'actorId' })
-  actor: User;
+  actor!: User;
 
   @Column()
-  actorId: number;
+  actorId!: number;
 }

@@ -1,11 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class PaginationDto {
   @ApiProperty({
     description: 'The page number to retrieve',
-    example: 1,
+    example: 0,
     required: false,
   })
   @Type(() => Number)

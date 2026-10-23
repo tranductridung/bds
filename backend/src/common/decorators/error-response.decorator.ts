@@ -28,10 +28,34 @@ const ERROR_CONFIG: Record<number, { description: string; message: string }> = {
   },
 };
 
-export const ApiErrors = (...statuses: number[]) =>
+export const ApiErrors = (
+  ...statuses: { statusCode: number; message?: string | undefined | null }[]
+) =>
+  applyDecorators(
+    ...statuses.map((status) => {
+      const config = status.message
+        ? { ...ERROR_CONFIG[status.statusCode], message: status.message }
+        : ERROR_CONFIG[status.statusCode];
+
+      return ApiResponse({
+        status: status.statusCode,
+        description: config.description,
+        schema: {
+          example: {
+            message: config.message,
+            error: config.description,
+            statusCode: status.statusCode,
+          },
+        },
+      });
+    }),
+  );
+
+export const ApiErrorsOld = (...statuses: number[]) =>
   applyDecorators(
     ...statuses.map((status) => {
       const config = ERROR_CONFIG[status];
+
       return ApiResponse({
         status,
         description: config.description,
@@ -40,6 +64,7 @@ export const ApiErrors = (...statuses: number[]) =>
             statusCode: status,
             message: {
               message: config.message,
+              error: config.description,
               statusCode: status,
             },
           },

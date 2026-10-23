@@ -4,6 +4,7 @@
     "paths": {
       "@/*": ["*"]
     },
+    "types": ["jest"],
     "module": "commonjs",
     "declaration": true,
     "removeComments": true,

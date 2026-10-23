@@ -10,7 +10,6 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { User } from './entities/user.entity';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from '../mail/mail.service';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -33,6 +32,7 @@ import {
 } from '../log/enums/system-log.enum';
 import { RequestContext } from '../common/types/request-context.interface';
 import { ListenerSystemLogPayload } from '../log/system-log/events/system-log-events.payload';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
@@ -342,9 +342,10 @@ export class UserService {
 
     const frontendUrl = this.configService.get<string>('FRONTEND_URL');
     const payload = {
-      id: newUser.id,
-      email: newUser.email,
-      fullName: newUser.fullName,
+      // id: newUser.id,
+      // email: newUser.email,
+      // fullName: newUser.fullName,
+      sub: newUser.id,
     };
 
     const token = this.jwtService.sign(payload, {

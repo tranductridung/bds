@@ -22,10 +22,10 @@ export class Rating {
   @Column({ type: 'text', nullable: true })
   comment!: string | null;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn()
   createdAt!: Date;
 
-  @UpdateDateColumn({ select: false })
+  @UpdateDateColumn()
   updatedAt!: Date;
 
   @ManyToOne(() => Property, (property) => property.ratings, {

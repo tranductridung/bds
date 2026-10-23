@@ -19,17 +19,27 @@ import {
 import { Request } from 'express';
 import { LeadNoteService } from './lead-note.service';
 import { LeadAccessGuard } from '../guards/lead.guard';
-import { PaginationDto } from 'src/common/dtos/pagination.dto';
+import { PaginationDto } from '@/src/common/dtos/pagination.dto';
 import { CreateLeadNoteDto } from './dto/create-lead-note.dto';
 import { UpdateLeadNoteDto } from './dto/update-lead-note.dto';
 import { AuditLog } from '@/src/log/decorators/audit.decorator';
 import { AuthJwtGuard } from '../../authentication/guards/auth.guard';
 import { ResponseService } from '@/src/common/helpers/response.service';
-import { PermissionsGuard } from 'src/authorization/guards/permission.guard';
 import { SystemUserGuard } from '@/src/authorization/guards/system-user.guard';
 import { AuditInterceptor } from '@/src/log/audit-log/interceptors/audit-log.interceptor';
 import { RequirePermissions } from '../../authentication/decorators/permissions.decorator';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiParam,
+  ApiBody,
+  ApiOkResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
+import { ApiErrorsOld } from '@/src/common/decorators/error-response.decorator';
+import { PermissionsGuard } from '@/src/authorization/guards/permission.guard';
+@ApiTags('Lead Notes')
 @ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @Controller('notes')
@@ -38,12 +48,17 @@ export class NoteController {
 
   @RequirePermissions('lead:note:read')
   @UseGuards(SystemUserGuard)
+  @ApiOperation({ summary: 'List all lead notes with pagination' })
+  @ApiQuery({ name: 'page', required: false, type: 'number' })
+  @ApiQuery({ name: 'limit', required: false, type: 'number' })
+  @ApiOkResponse({ description: 'Lead notes retrieved successfully' })
   @Get()
   async findAll(@Query() paginationDto: PaginationDto) {
     const { notes, total } = await this.leadNoteService.findAll(paginationDto);
     return ResponseService.format(notes, { total });
   }
 }
+@ApiTags('Lead Notes Management')
 @ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard, LeadAccessGuard)
 @UseInterceptors(AuditInterceptor)
@@ -52,6 +67,11 @@ export class LeadNoteController {
   constructor(private readonly leadNoteService: LeadNoteService) {}
 
   @RequirePermissions('lead:note:create')
+  @ApiOperation({ summary: 'Create a new note for a lead' })
+  @ApiParam({ name: 'leadId', description: 'Lead ID', type: 'number' })
+  @ApiBody({ type: CreateLeadNoteDto })
+  @ApiOkResponse({ description: 'Note created successfully' })
+  @ApiErrorsOld(400, 404)
   @Post()
   @AuditLog({
     action: AuditLogAction.CREATE,
@@ -78,6 +98,12 @@ export class LeadNoteController {
   }
 
   @RequirePermissions('lead:note:read')
+  @ApiOperation({ summary: 'List all notes for a lead' })
+  @ApiParam({ name: 'leadId', description: 'Lead ID', type: 'number' })
+  @ApiQuery({ name: 'page', required: false, type: 'number' })
+  @ApiQuery({ name: 'limit', required: false, type: 'number' })
+  @ApiOkResponse({ description: 'Lead notes retrieved successfully' })
+  @ApiErrorsOld(404)
   @Get()
   async findNotesOfLead(
     @Param('leadId', ParseIntPipe) leadId: number,
@@ -91,6 +117,11 @@ export class LeadNoteController {
   }
 
   @RequirePermissions('lead:note:delete')
+  @ApiOperation({ summary: 'Delete a note' })
+  @ApiParam({ name: 'leadId', description: 'Lead ID', type: 'number' })
+  @ApiParam({ name: 'noteId', description: 'Note ID', type: 'number' })
+  @ApiOkResponse({ description: 'Note deleted successfully' })
+  @ApiErrorsOld(404)
   @Delete(':noteId')
   @AuditLog({
     action: AuditLogAction.DELETE,

@@ -1,4 +1,3 @@
-import { ApiErrors } from './../common/decorators/error-response.decorator';
 import {
   Get,
   Req,
@@ -35,6 +34,7 @@ import { MessageResponseDto } from '../common/dtos/message-response';
 import { RateLimit } from '../common/decorators/rate-limit.decorator';
 import { ResponseService } from '../common/helpers/response.service';
 import { AuthJwtGuard, SetupPasswordJwtGuard } from './guards/auth.guard';
+import { ApiErrorsOld } from './../common/decorators/error-response.decorator';
 import { RefreshTokenService } from './../refresh-token/refresh-token.service';
 import { RefreshTokenResponseDto } from './dto/response/refresh-token.response.dto';
 
@@ -51,10 +51,12 @@ export class AuthController {
   @ApiOperation({ summary: 'Log in and receive access and refresh tokens' })
   @ApiBody({ type: LoginDTO })
   @ApiOkResponse({
-    type: ApiResponseDto<LoginResponseDto>(LoginResponseDto, true),
+    type: ApiResponseDto<LoginResponseDto>(LoginResponseDto, {
+      isMeta: true,
+    }),
     description: 'Login successful',
   })
-  @ApiErrors(400, 401)
+  @ApiErrorsOld(400, 401)
   @Post('login')
   async login(
     @Req() req: Request,
@@ -88,12 +90,11 @@ export class AuthController {
     type: ApiResponseDto<MessageResponseDto>(MessageResponseDto),
     description: 'Logout successful',
   })
-  @ApiErrors(401)
+  @ApiErrorsOld(401)
   @Post('logout')
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const cookies = req.cookies as { refreshToken?: string };
     const refreshToken = cookies?.refreshToken;
-
     if (refreshToken) {
       res.clearCookie('refreshToken', {
         httpOnly: true,
@@ -115,7 +116,7 @@ export class AuthController {
     type: ApiResponseDto<RefreshTokenResponseDto>(RefreshTokenResponseDto),
     description: 'New access token issued',
   })
-  @ApiErrors(401)
+  @ApiErrorsOld(401)
   @Post('refresh')
   async refreshToken(@Req() req: Request) {
     const cookies = req.cookies as { refreshToken?: string };
@@ -131,7 +132,7 @@ export class AuthController {
     type: ApiResponseDto<MessageResponseDto>(MessageResponseDto),
     description: 'Password reset link sent',
   })
-  @ApiErrors(400, 404)
+  @ApiErrorsOld(400, 404)
   @Post('forgot-password')
   async forgotPassword(@Body('email') email: string) {
     await this.authenticationService.sendResetPasswordLink(email);
@@ -147,7 +148,7 @@ export class AuthController {
     type: ApiResponseDto<MessageResponseDto>(MessageResponseDto),
     description: 'Password reset successfully',
   })
-  @ApiErrors(400)
+  @ApiErrorsOld(400)
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDTO: ResetPasswordDto) {
     await this.authenticationService.resetPassword(resetPasswordDTO);
@@ -158,7 +159,7 @@ export class AuthController {
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Set initial password for a new user' })
   @ApiBody({ type: SetupPasswordDto })
-  @ApiErrors(401)
+  @ApiErrorsOld(401)
   @ApiOkResponse({
     type: ApiResponseDto<MessageResponseDto>(MessageResponseDto),
     description: 'Password setup successfully',
@@ -182,7 +183,7 @@ export class AuthController {
     type: ApiResponseDto<MessageResponseDto>(MessageResponseDto),
     description: 'Setup password email resent',
   })
-  @ApiErrors(400, 404)
+  @ApiErrorsOld(400, 404)
   @Post('resend-setup-password-email')
   async resendSetupPasswordEmail(@Body('email') email: string) {
     await this.authenticationService.resendSetupPasswordEmail(email);
@@ -198,7 +199,7 @@ export class AuthController {
     type: ApiResponseDto<FindTokensResponseDto>(FindTokensResponseDto),
     description: 'Refresh tokens retrieved',
   })
-  @ApiErrors(401)
+  @ApiErrorsOld(401)
   @Get('tokens')
   async findAllToken() {
     const tokens = await this.refreshTokenService.find();
@@ -217,7 +218,7 @@ export class AuthController {
     type: ApiResponseDto<FindTokenResponseDto>(FindTokenResponseDto),
     description: 'Get token by ID successfully',
   })
-  @ApiErrors(404, 401)
+  @ApiErrorsOld(404, 401)
   @Get('tokens/:tokenId')
   async findToken(@Param('tokenId') id: string) {
     const token = await this.refreshTokenService.findOne(id);

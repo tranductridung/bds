@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common';
 import { SystemLogService } from './system-log.service';
-import { AllExceptionsFilter } from './filters/app-exception.filter';
 @Module({
-  providers: [SystemLogService, AllExceptionsFilter],
+  providers: [SystemLogService],
   exports: [SystemLogService],
 })
 export class SystemLogModule {}

@@ -17,10 +17,10 @@ export class LeadNote {
   @Column()
   content!: string;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn()
   createdAt!: Date;
 
-  @UpdateDateColumn({ select: false })
+  @UpdateDateColumn()
   updatedAt!: Date;
 
   @ManyToOne(() => Lead, (lead) => lead.leadNotes, {

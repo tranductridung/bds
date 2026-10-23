@@ -19,7 +19,10 @@ export class SeedService {
     await this.userSeed.seedAdmin('admin1@gmail.com');
     await this.userSeed.seedAdmin('admin2@gmail.com');
 
-    await this.userSeed.seedStaff('staff1@gmail.com');
-    await this.userSeed.seedStaff('staff2@gmail.com');
+    await this.userSeed.seedStaff('staff1@gmail.com', true);
+    await this.userSeed.seedStaff('staff2@gmail.com', true);
+
+    await this.userSeed.seedStaff('unverifiedStaff1@gmail.com', false);
+    await this.userSeed.seedStaff('unverifiedStaff2@gmail.com', false);
   }
 }

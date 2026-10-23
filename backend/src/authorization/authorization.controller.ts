@@ -23,20 +23,20 @@ import { Request } from 'express';
 import { UpdateRoleDto } from './dtos/update-role.dto';
 import { CreateRoleDto } from './dtos/create-role.dto';
 import { PermissionsGuard } from './guards/permission.guard';
-import { PaginationDto } from 'src/common/dtos/pagination.dto';
+import { PaginationDto } from '../common/dtos/pagination.dto';
 import { AuthorizationService } from './authorization.service';
 import { ApiResponseDto } from '../common/dtos/api-response.dto';
 import { UpdatePermissionDto } from './dtos/update-permission.dto';
 import { CreatePermissionDto } from './dtos/create-permission.dto';
 import { AuthJwtGuard } from '../authentication/guards/auth.guard';
-import { RoleResponseDto } from './dtos/responses/role.response.dto';
+import { RoleResponseDto } from './dtos/responses/role-response.dto';
 import { MessageResponseDto } from '../common/dtos/message-response';
 import { ResponseService } from '../common/helpers/response.service';
-import { PermissionResponseDto } from './dtos/responses/permission.response';
+import { ApiErrorsOld } from '../common/decorators/error-response.decorator';
+import { PermissionResponseDto } from './dtos/responses/permission-response';
 import { RequirePermissions } from '../authentication/decorators/permissions.decorator';
 import { PermissionMetaResponseDto } from './dtos/responses/permission-meta.response.dto';
 import { RolePermissionResponseDto } from './dtos/responses/update-role-permission.response';
-import { ApiErrors } from '../common/decorators/error-response.decorator';
 
 @ApiTags('Authorization')
 @ApiBearerAuth('access-token')
@@ -53,7 +53,7 @@ export class AuthorizationController {
     type: ApiResponseDto<RoleResponseDto>(RoleResponseDto),
     description: 'Role created successfully',
   })
-  @ApiErrors(409)
+  @ApiErrorsOld(409)
   @Post('roles')
   async createRole(@Body() createRoleDto: CreateRoleDto) {
     const role = await this.authorizationService.createRole(createRoleDto);
@@ -63,10 +63,12 @@ export class AuthorizationController {
   @RequirePermissions('authorization:read')
   @ApiOperation({ summary: 'List roles with pagination' })
   @ApiOkResponse({
-    type: ApiResponseDto<RoleResponseDto>(RoleResponseDto, true),
+    type: ApiResponseDto<RoleResponseDto>(RoleResponseDto, {
+      isMeta: true,
+    }),
     description: 'Roles retrieved successfully',
   })
-  @ApiErrors(404)
+  @ApiErrorsOld(404)
   @Get('roles')
   async findRoles(@Query() paginationDto: PaginationDto) {
     const { roles, total } =
@@ -81,7 +83,7 @@ export class AuthorizationController {
     type: ApiResponseDto<RoleResponseDto>(RoleResponseDto),
     description: 'Role retrieved',
   })
-  @ApiErrors(404)
+  @ApiErrorsOld(404)
   @Get('roles/:id')
   async findRole(@Param('id', ParseIntPipe) id: number) {
     const role = await this.authorizationService.findRole(id);
@@ -96,7 +98,7 @@ export class AuthorizationController {
     type: ApiResponseDto<RoleResponseDto>(RoleResponseDto),
     description: 'Role updated',
   })
-  @ApiErrors(409, 404)
+  @ApiErrorsOld(409, 404)
   @Patch('roles/:id')
   async updateRole(
     @Param('id', ParseIntPipe) id: number,
@@ -113,7 +115,7 @@ export class AuthorizationController {
     type: ApiResponseDto<MessageResponseDto>(MessageResponseDto),
     description: 'Role deleted',
   })
-  @ApiErrors(404)
+  @ApiErrorsOld(404)
   @Delete('roles/:id')
   async removeRole(@Param('id', ParseIntPipe) id: number) {
     await this.authorizationService.removeRole(id);
@@ -124,10 +126,12 @@ export class AuthorizationController {
   @ApiOperation({ summary: 'Get permissions for a role' })
   @ApiParam({ name: 'id', description: 'Role id', type: 'number' })
   @ApiOkResponse({
-    type: ApiResponseDto<PermissionResponseDto>(PermissionResponseDto, true),
+    type: ApiResponseDto<PermissionResponseDto>(PermissionResponseDto, {
+      isMeta: true,
+    }),
     description: 'Permissions retrieved',
   })
-  @ApiErrors(404)
+  @ApiErrorsOld(404)
   @Get('roles/:id/permissions')
   async findRolePermissions(@Param('id', ParseIntPipe) id: number) {
     const permissions = await this.authorizationService.getRolePermissions(id);
@@ -142,7 +146,7 @@ export class AuthorizationController {
     type: ApiResponseDto<PermissionResponseDto>(PermissionResponseDto),
     description: 'Permission created',
   })
-  @ApiErrors(400)
+  @ApiErrorsOld(400)
   @Post('permissions')
   async createPermission(@Body() createPermissionDto: CreatePermissionDto) {
     const permission =
@@ -154,10 +158,12 @@ export class AuthorizationController {
   @RequirePermissions('authorization:read')
   @ApiOperation({ summary: 'List permissions with pagination' })
   @ApiOkResponse({
-    type: ApiResponseDto<PermissionResponseDto>(PermissionResponseDto, true),
+    type: ApiResponseDto<PermissionResponseDto>(PermissionResponseDto, {
+      isMeta: true,
+    }),
     description: 'Permissions retrieved successfully',
   })
-  @ApiErrors(400)
+  @ApiErrorsOld(400)
   @Get('permissions')
   async findPermissions(@Query() paginationDto: PaginationDto) {
     const { permissions, total } =
@@ -185,7 +191,7 @@ export class AuthorizationController {
     type: ApiResponseDto<PermissionResponseDto>(PermissionResponseDto),
     description: 'Permission retrieved',
   })
-  @ApiErrors(404)
+  @ApiErrorsOld(404)
   @Get('permissions/:id')
   async findPermission(@Param('id', ParseIntPipe) id: number) {
     const permission = await this.authorizationService.findPermission(id);
@@ -200,7 +206,7 @@ export class AuthorizationController {
     type: ApiResponseDto<PermissionResponseDto>(PermissionResponseDto),
     description: 'Permission updated',
   })
-  @ApiErrors(400, 404)
+  @ApiErrorsOld(400, 404)
   @Patch('permissions/:id')
   async updatePermission(
     @Param('id', ParseIntPipe) id: number,
@@ -220,7 +226,7 @@ export class AuthorizationController {
     type: ApiResponseDto<MessageResponseDto>(MessageResponseDto),
     description: 'Permission deleted',
   })
-  @ApiErrors(404)
+  @ApiErrorsOld(404)
   @Delete('permissions/:id')
   async removePermission(@Param('id', ParseIntPipe) id: number) {
     await this.authorizationService.removePermission(id);
@@ -241,15 +247,13 @@ export class AuthorizationController {
     // type: ApiResponseDto<UserRoleResponseDto>(UserRoleResponseDto),
     description: 'Role assigned to user',
   })
-  @ApiErrors(400)
+  @ApiErrorsOld(400)
   @Patch('users/:userId/roles')
   async assignRoleToUser(
-    @Req() req: Request,
     @Param('userId', ParseIntPipe) userId: number,
     @Body('roleId', ParseIntPipe) roleId: number,
   ) {
     const userRole = await this.authorizationService.assignRoleToUser(
-      Number(req?.user?.id),
       userId,
       roleId,
     );
@@ -297,7 +301,9 @@ export class AuthorizationController {
   @ApiOperation({ summary: 'Get permissions of a user' })
   @ApiParam({ name: 'userId', description: 'User id', type: 'number' })
   @ApiOkResponse({
-    type: ApiResponseDto<PermissionResponseDto>(PermissionResponseDto, true),
+    type: ApiResponseDto<PermissionResponseDto>(PermissionResponseDto, {
+      isMeta: true,
+    }),
     description: 'User permissions retrieved',
   })
   @Get('users/:userId/permissions')
@@ -394,7 +400,9 @@ export class AuthorizationController {
   @ApiOperation({ summary: 'Get permissions of a role' })
   @ApiParam({ name: 'roleId', description: 'Role id', type: 'number' })
   @ApiOkResponse({
-    type: ApiResponseDto<PermissionResponseDto>(PermissionResponseDto, true),
+    type: ApiResponseDto<PermissionResponseDto>(PermissionResponseDto, {
+      isMeta: true,
+    }),
     description: 'Role permissions retrieved',
   })
   @Get('roles/:roleId/permissions')

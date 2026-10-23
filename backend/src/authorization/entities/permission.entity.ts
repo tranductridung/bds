@@ -44,10 +44,10 @@ export class Permission {
   @Column({ type: 'enum', enum: Level, default: Level.BUSINESS, update: false })
   level!: Level;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn()
   createdAt!: Date;
 
-  @UpdateDateColumn({ select: false })
+  @UpdateDateColumn()
   updatedAt!: Date;
 
   @OneToMany(() => RolePermission, (rp) => rp.permission)

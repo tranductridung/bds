@@ -17,17 +17,17 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../user/user.service';
 import { MailService } from '../mail/mail.service';
-import { User } from 'src/user/entities/user.entity';
+import { User } from '../user/entities/user.entity';
 import { UserStatus } from '../user/enums/user.enum';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SetupPasswordDto } from './dto/setup-password.dto';
-import { UserPayload } from './interfaces/user-payload.interface';
 import { RequestContext } from '../common/types/request-context.interface';
 import { SystemLogEvents } from '../log/system-log/events/system-log.event';
 import { RefreshTokenService } from '../refresh-token/refresh-token.service';
 import { AuthorizationService } from '../authorization/authorization.service';
 import { ListenerSystemLogPayload } from '../log/system-log/events/system-log-events.payload';
+import { AuthJwtPayload } from './interfaces/auth-jwt-payload.interface';
 
 @Injectable()
 export class AuthenticationService {
@@ -62,7 +62,6 @@ export class AuthenticationService {
       return { accessToken, refreshToken, user: payload };
     } catch (error) {
       this.logger.error(error);
-
       this.eventEmitter.emit(SystemLogEvents.AUTH_LOGIN_FAILED, {
         action: SystemLogAction.AUTHENTICATION_FAILED,
         actorId: undefined,
@@ -74,19 +73,30 @@ export class AuthenticationService {
         statusCode: requestCtx.statusCode,
       } satisfies ListenerSystemLogPayload);
     }
-
     throw new UnauthorizedException('Invalid email or password');
   }
 
   async logout(refreshToken: string) {
-    const userPayload: UserPayload = this.jwtService.verify(refreshToken, {
-      secret: this.configService.get('REFRESH_TOKEN'),
-    });
+    let userId: number | string | undefined;
 
-    return await this.refreshTokenService.revokeToken(
-      refreshToken,
-      userPayload.id,
-    );
+    try {
+      // still logout with expired token
+      const payload = this.jwtService.verify<AuthJwtPayload>(refreshToken, {
+        secret: this.configService.get('REFRESH_TOKEN'),
+        ignoreExpiration: true,
+      });
+      userId = payload.sub;
+    } catch {
+      // trash token / signature invalid -> nothing to revoke
+      return;
+    }
+
+    try {
+      await this.refreshTokenService.revokeToken(refreshToken, userId);
+    } catch (e) {
+      // token revoke or not exist -> skip (idempotent)
+      if (!(e instanceof NotFoundException)) throw e;
+    }
   }
 
   async validate(email: string, password: string) {
@@ -123,7 +133,7 @@ export class AuthenticationService {
     if (!refreshToken)
       throw new UnauthorizedException('Refresh token required!');
 
-    let userPayload: UserPayload;
+    let userPayload: AuthJwtPayload;
 
     try {
       userPayload = this.jwtService.verify(refreshToken, {
@@ -133,7 +143,7 @@ export class AuthenticationService {
       // Check if token exist
       const isTokenExist = await this.refreshTokenService.isTokenExist(
         refreshToken,
-        userPayload.id,
+        userPayload.sub,
       );
       if (!isTokenExist)
         throw new UnauthorizedException('Expired refresh token. Login again!');
@@ -142,7 +152,7 @@ export class AuthenticationService {
       throw new UnauthorizedException('Invalid or expired refresh token!');
     }
 
-    const user = await this.userService.findOne(userPayload.id);
+    const user = await this.userService.findOne(userPayload.sub);
     const roles = await this.authorizationService.getRolesOfUser(user.id);
 
     // Check if token is exist in database
@@ -150,10 +160,11 @@ export class AuthenticationService {
 
     const accessToken = this.jwtService.sign(
       {
-        id: user.id,
-        email: user.email,
-        fullName: user.fullName,
-        roles: roles.map((role) => role.name),
+        sub: user.id,
+        // id: user.id,
+        // email: user.email,
+        // fullName: user.fullName,
+        // roles: roles.map((role) => role.name),
       },
       {
         secret: this.configService.get('ACCESS_TOKEN'),
@@ -165,6 +176,11 @@ export class AuthenticationService {
   }
 
   async sendResetPasswordLink(email: string) {
+    const response = {
+      success: true,
+      message: 'Reset link is sent to your email!',
+    };
+
     const user = await this.dataSource
       .createQueryBuilder(User, 'user')
       .where('user.email = :email', { email })
@@ -172,11 +188,7 @@ export class AuthenticationService {
       .select(['user.id', 'user.email'])
       .getOne();
 
-    if (!user)
-      return {
-        success: true,
-        message: 'Reset link is sent to your email!',
-      };
+    if (!user) return response;
 
     const payload = { email: user.email, sub: user.id };
     const token = this.jwtService.sign(payload, {
@@ -188,6 +200,8 @@ export class AuthenticationService {
 
     const resetPwdLink = `${frontendUrl}/authentication/reset-password?token=${token}`;
     await this.mailService.resetPasswordEmail(user.email, resetPwdLink);
+
+    return response;
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
@@ -240,10 +254,11 @@ export class AuthenticationService {
     // Create new token
     const frontendUrl = this.configService.get<string>('FRONTEND_URL');
     const payload = {
-      id: user.id,
-      email: user.email,
-      fullName: user.fullName,
-      roles: [],
+      sub: user.id,
+      // id: user.id,
+      // email: user.email,
+      // fullName: user.fullName,
+      // roles: [],
     };
 
     const token = this.jwtService.sign(payload, {

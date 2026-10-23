@@ -41,10 +41,10 @@ export class Reminder {
   @Column({ type: 'varchar', nullable: true })
   jobId!: string | null;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn()
   createdAt!: Date;
 
-  @UpdateDateColumn({ select: false })
+  @UpdateDateColumn()
   updatedAt!: Date;
 
   @ManyToOne(() => User, (creator) => creator.createdReminders, {

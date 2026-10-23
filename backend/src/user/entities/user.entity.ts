@@ -9,7 +9,7 @@ import {
 import { IsEnum } from 'class-validator';
 import { UserStatus, Gender } from '../enums/user.enum';
 import { Reminder } from '@/src/reminder/entities/reminder.entity';
-import { UserRole } from 'src/authorization/entities/user-role.entity';
+import { UserRole } from '@/src/authorization/entities/user-role.entity';
 import { AuditLog } from '@/src/log/audit-log/entities/audit-log.entity';
 import { SystemLog } from '@/src/log/system-log/entities/system-log.entity';
 import { LeadAssignment } from '@/src/lead/assignment/lead-assignment.entity';
@@ -62,10 +62,10 @@ export class User {
   @Column({ default: 0 })
   failedLoginAttempts!: number;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn()
   createdAt!: Date;
 
-  @UpdateDateColumn({ select: false })
+  @UpdateDateColumn()
   updatedAt!: Date;
 
   @OneToMany(() => RefreshToken, (tokens) => tokens.user)

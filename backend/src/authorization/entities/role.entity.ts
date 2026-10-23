@@ -31,10 +31,10 @@ export class Role {
   @Column({ default: false })
   isSystem!: boolean;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn()
   createdAt!: Date;
 
-  @UpdateDateColumn({ select: false })
+  @UpdateDateColumn()
   updatedAt!: Date;
 
   @OneToMany(() => RolePermission, (rp) => rp.role)

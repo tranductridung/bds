@@ -1,8 +1,8 @@
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { UserPayload } from '../interfaces/user-payload.interface';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { AuthJwtPayload } from '../interfaces/auth-jwt-payload.interface';
 
 @Injectable()
 export class SetupPasswordJwtStrategy extends PassportStrategy(
@@ -21,7 +21,8 @@ export class SetupPasswordJwtStrategy extends PassportStrategy(
     });
   }
 
-  validate(payload: UserPayload) {
-    return payload;
+  validate(payload: AuthJwtPayload) {
+    return { id: payload.sub };
+    // return payload;
   }
 }

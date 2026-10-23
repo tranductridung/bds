@@ -13,6 +13,13 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
   AuditLogAction,
   AuditLogTargetType,
 } from '../log/enums/audit-log.enum';
@@ -22,14 +29,20 @@ import { CreateFeatureDto } from './dto/create-feature.dto';
 import { UpdateFeatureDto } from './dto/update-feature.dto';
 import { AuditLog } from '../log/decorators/audit.decorator';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
+import {
+  ApiMessageResponseDto,
+  ApiResponseDto,
+} from '../common/dtos/api-response.dto';
 import { AuthJwtGuard } from '../authentication/guards/auth.guard';
 import { ResponseService } from '../common/helpers/response.service';
+import { ApiErrors } from '../common/decorators/error-response.decorator';
+import { FeatureResponseDto } from './dto/responses/feature-response.dto';
 import { SystemUserGuard } from '../authorization/guards/system-user.guard';
 import { PermissionsGuard } from 'src/authorization/guards/permission.guard';
-import { RequirePermissions } from '../authentication/decorators/permissions.decorator';
 import { AuditInterceptor } from '../log/audit-log/interceptors/audit-log.interceptor';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { RequirePermissions } from '../authentication/decorators/permissions.decorator';
 
+@ApiTags('Feature')
 @ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard, SystemUserGuard)
 @UseInterceptors(AuditInterceptor)
@@ -37,6 +50,13 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 export class FeatureController {
   constructor(private readonly featureService: FeatureService) {}
 
+  @ApiOperation({ summary: 'Create a new feature' })
+  @ApiBody({ type: CreateFeatureDto })
+  @ApiOkResponse({
+    type: ApiResponseDto<FeatureResponseDto>(FeatureResponseDto),
+    description: 'Feature created successfully',
+  })
+  @ApiErrors({ statusCode: 409, message: 'Feature name already exists' })
   @RequirePermissions('feature:create')
   @Post()
   @AuditLog({
@@ -58,11 +78,20 @@ export class FeatureController {
     return ResponseService.format(feature);
   }
 
+  @ApiOperation({ summary: 'Get list of features' })
+  @ApiOkResponse({
+    type: ApiResponseDto<FeatureResponseDto>(FeatureResponseDto, {
+      isArray: true,
+      isMeta: true,
+    }),
+    description: 'List of features retrieved successfully',
+  })
   @RequirePermissions('feature:read')
   @Get()
   async findAll(@Query() paginationDto: PaginationDto) {
     const { features, total } =
       await this.featureService.findAll(paginationDto);
+
     return ResponseService.format(features, {
       total,
       page: paginationDto.page,
@@ -70,6 +99,12 @@ export class FeatureController {
     });
   }
 
+  @ApiOperation({ summary: 'Get feature by ID' })
+  @ApiOkResponse({
+    type: ApiResponseDto<FeatureResponseDto>(FeatureResponseDto),
+    description: 'Feature retrieved successfully',
+  })
+  @ApiErrors({ statusCode: 404, message: 'Feature not found!' })
   @RequirePermissions('feature:read')
   @Get(':featureId')
   async find(@Param('featureId', ParseIntPipe) featureId: number) {
@@ -77,6 +112,15 @@ export class FeatureController {
     return ResponseService.format(feature);
   }
 
+  @ApiOperation({ summary: 'Update a feature' })
+  @ApiOkResponse({
+    type: ApiResponseDto<FeatureResponseDto>(FeatureResponseDto),
+    description: 'Feature updated successfully',
+  })
+  @ApiErrors(
+    { statusCode: 404, message: 'Feature not found!' },
+    { statusCode: 409, message: 'Feature name already exists' },
+  )
   @RequirePermissions('feature:update')
   @Patch(':featureId')
   @AuditLog({
@@ -103,6 +147,15 @@ export class FeatureController {
     return ResponseService.format(feature);
   }
 
+  @ApiOperation({ summary: 'Delete a feature' })
+  @ApiOkResponse({
+    type: ApiMessageResponseDto(
+      'Feature removed successfully',
+      'FeatureRemovedResponse',
+    ),
+    description: 'Feature removed successfully',
+  })
+  @ApiErrors({ statusCode: 404, message: 'Feature not found!' })
   @RequirePermissions('feature:delete')
   @Delete(':featureId')
   @AuditLog({

@@ -17,7 +17,7 @@ import {
 } from '@/src/log/enums/audit-log.enum';
 import { Request } from 'express';
 import { LeadAccessGuard } from '../guards/lead.guard';
-import { PaginationDto } from 'src/common/dtos/pagination.dto';
+import { PaginationDto } from '@/src/common/dtos/pagination.dto';
 import { AuditLog } from '@/src/log/decorators/audit.decorator';
 import { LeadAssignmentService } from './lead-assignment.service';
 import { AuthJwtGuard } from '../../authentication/guards/auth.guard';
@@ -27,7 +27,17 @@ import { PermissionsGuard } from 'src/authorization/guards/permission.guard';
 import { SystemUserGuard } from '@/src/authorization/guards/system-user.guard';
 import { RequirePermissions } from '../../authentication/decorators/permissions.decorator';
 import { AuditInterceptor } from '@/src/log/audit-log/interceptors/audit-log.interceptor';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiParam,
+  ApiBody,
+  ApiOkResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
+import { ApiErrorsOld } from '@/src/common/decorators/error-response.decorator';
+@ApiTags('Lead Assignments')
 @ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard, SystemUserGuard)
 @Controller('assignments')
@@ -35,6 +45,10 @@ export class AssignmentController {
   constructor(private readonly leadAssignmentService: LeadAssignmentService) {}
 
   @RequirePermissions('lead:assignment:read')
+  @ApiOperation({ summary: 'List all lead assignments with pagination' })
+  @ApiQuery({ name: 'page', required: false, type: 'number' })
+  @ApiQuery({ name: 'limit', required: false, type: 'number' })
+  @ApiOkResponse({ description: 'Lead assignments retrieved successfully' })
   @Get()
   async findAll(@Query() paginationDto: PaginationDto) {
     const { assignments, total } =
@@ -43,6 +57,7 @@ export class AssignmentController {
   }
 }
 
+@ApiTags('Lead Assignments Management')
 @ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @UseInterceptors(AuditInterceptor)
@@ -52,6 +67,11 @@ export class LeadAssignmentController {
 
   @RequirePermissions('lead:assignment:create')
   @UseGuards(LeadAccessGuard)
+  @ApiOperation({ summary: 'Create a new assignment for a lead' })
+  @ApiParam({ name: 'leadId', description: 'Lead ID', type: 'number' })
+  @ApiBody({ schema: { properties: { agentId: { type: 'number' } } } })
+  @ApiOkResponse({ description: 'Assignment created successfully' })
+  @ApiErrorsOld(400, 404)
   @Post()
   @AuditLog({
     action: AuditLogAction.CREATE,
@@ -79,6 +99,12 @@ export class LeadAssignmentController {
 
   @RequirePermissions('lead:assignment:read')
   @UseGuards(LeadAccessGuard)
+  @ApiOperation({ summary: 'List all assignments for a lead' })
+  @ApiParam({ name: 'leadId', description: 'Lead ID', type: 'number' })
+  @ApiQuery({ name: 'page', required: false, type: 'number' })
+  @ApiQuery({ name: 'limit', required: false, type: 'number' })
+  @ApiOkResponse({ description: 'Lead assignments retrieved successfully' })
+  @ApiErrorsOld(404)
   @Get()
   async findAllAssignmentsOfLead(
     @Param('leadId', ParseIntPipe) leadId: number,
@@ -94,6 +120,15 @@ export class LeadAssignmentController {
 
   @RequirePermissions('lead:assignment:delete')
   @UseGuards(LeadSystemUserGuard)
+  @ApiOperation({ summary: 'Delete an assignment' })
+  @ApiParam({ name: 'leadId', description: 'Lead ID', type: 'number' })
+  @ApiParam({
+    name: 'assignmentId',
+    description: 'Assignment ID',
+    type: 'number',
+  })
+  @ApiOkResponse({ description: 'Assignment deleted successfully' })
+  @ApiErrorsOld(404)
   @Delete(':assignmentId')
   @AuditLog({
     action: AuditLogAction.DELETE,

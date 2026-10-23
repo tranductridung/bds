@@ -14,18 +14,28 @@ import {
 import { Request } from 'express';
 import { UserService } from './user.service';
 import { UserStatus } from './enums/user.enum';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiBody,
+  ApiParam,
+  ApiOkResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
+import { ApiErrorsOld } from '../common/decorators/error-response.decorator';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDTO } from './dto/change-pass.dto';
-import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { AuthJwtGuard } from '../authentication/guards/auth.guard';
 import { ResponseService } from '../common/helpers/response.service';
 import { SuperAdminGuard } from '../authorization/guards/superadmin.guard';
-import { PermissionsGuard } from 'src/authorization/guards/permission.guard';
 import { UserPayload } from '../authentication/interfaces/user-payload.interface';
 import { RequirePermissions } from '../authentication/decorators/permissions.decorator';
+import { PaginationDto } from '../common/dtos/pagination.dto';
+import { PermissionsGuard } from '../authorization/guards/permission.guard';
 
+@ApiTags('Users')
 @ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @Controller('users')
@@ -34,10 +44,15 @@ export class UserController {
 
   @RequirePermissions('user:update')
   @UseGuards(SuperAdminGuard)
+  @ApiOperation({ summary: 'Ban a user' })
+  @ApiParam({ name: 'userId', description: 'User ID to ban', type: 'number' })
+  @ApiBody({ schema: { properties: { reason: { type: 'string' } } } })
+  @ApiOkResponse({ description: 'User banned successfully' })
+  @ApiErrorsOld(403, 404)
   @Post(':userId/ban')
   async banUser(
     @Req() req: Request,
-    @Body('userId', ParseIntPipe) userId: number,
+    @Param('userId', ParseIntPipe) userId: number,
     @Body() reason: string,
   ) {
     const user = await this.userService.banUser(
@@ -51,10 +66,14 @@ export class UserController {
 
   @RequirePermissions('user:update')
   @UseGuards(SuperAdminGuard)
+  @ApiOperation({ summary: 'Unban a user' })
+  @ApiParam({ name: 'userId', description: 'User ID to unban', type: 'number' })
+  @ApiOkResponse({ description: 'User unbanned successfully' })
+  @ApiErrorsOld(400, 403, 404)
   @Post(':userId/unban')
   async unbanUser(
     @Req() req: Request,
-    @Body('userId', ParseIntPipe) userId: number,
+    @Param('userId', ParseIntPipe) userId: number,
   ) {
     const user = await this.userService.unbanUser(
       Number(req?.user?.id),
@@ -65,6 +84,10 @@ export class UserController {
 
   @RequirePermissions('user:create')
   @UseGuards(SuperAdminGuard)
+  @ApiOperation({ summary: 'Create a new user (Admin only)' })
+  @ApiBody({ type: CreateUserDTO })
+  @ApiOkResponse({ description: 'User created successfully' })
+  @ApiErrorsOld(400, 409)
   @Post()
   async create(@Req() req: Request, @Body() createUserDto: CreateUserDTO) {
     const user = await this.userService.createUserBySuperAdmin(
@@ -75,6 +98,10 @@ export class UserController {
   }
 
   @RequirePermissions('user:read')
+  @ApiOperation({ summary: 'List all users with pagination' })
+  @ApiQuery({ name: 'page', required: false, type: 'number' })
+  @ApiQuery({ name: 'limit', required: false, type: 'number' })
+  @ApiOkResponse({ description: 'Users retrieved successfully' })
   @Get()
   async findAll(@Query() paginationDto: PaginationDto) {
     const { users, total } = await this.userService.findAll(paginationDto);
@@ -82,6 +109,13 @@ export class UserController {
   }
 
   @RequirePermissions('user:update')
+  @ApiOperation({ summary: 'Change user status' })
+  @ApiParam({ name: 'id', description: 'User ID', type: 'number' })
+  @ApiBody({
+    schema: { properties: { status: { enum: Object.values(UserStatus) } } },
+  })
+  @ApiOkResponse({ description: 'User status changed' })
+  @ApiErrorsOld(400, 404)
   @Patch(':id/change-status')
   async changeStatus(
     @Req() req: Request,
@@ -97,6 +131,10 @@ export class UserController {
   }
 
   @RequirePermissions('user:update')
+  @ApiOperation({ summary: 'Toggle user status' })
+  @ApiParam({ name: 'id', description: 'User ID', type: 'number' })
+  @ApiOkResponse({ description: 'User status toggled' })
+  @ApiErrorsOld(400, 404)
   @Patch(':id/toggle-status')
   async toggleStatus(
     @Req() req: Request,
@@ -110,6 +148,8 @@ export class UserController {
     return ResponseService.format(user);
   }
 
+  @ApiOperation({ summary: 'Get current user info' })
+  @ApiOkResponse({ description: 'Current user info retrieved' })
   @Get('me')
   getUserInfo(@Req() req: Request) {
     return ResponseService.format({
@@ -120,6 +160,8 @@ export class UserController {
     });
   }
 
+  @ApiOperation({ summary: 'Get current user profile' })
+  @ApiOkResponse({ description: 'User profile retrieved' })
   @Get('me/profile')
   async getProfile(@Req() req: Request) {
     const userId = Number(req?.user?.id);
@@ -128,18 +170,34 @@ export class UserController {
     return ResponseService.format(user);
   }
 
+  @ApiOperation({ summary: 'Update current user profile' })
+  @ApiBody({ type: UpdateUserDto })
+  @ApiOkResponse({ description: 'Profile updated successfully' })
+  @ApiErrorsOld(400)
   @Patch('me')
   async updateProfile(@Req() req: Request, @Body() data: UpdateUserDto) {
     const user = await this.userService.updateUser(Number(req?.user?.id), data);
     return ResponseService.format(user);
   }
 
+  @ApiOperation({ summary: 'Change password for current user' })
+  @ApiBody({ type: ChangePasswordDTO })
+  @ApiOkResponse({ description: 'Password changed successfully' })
+  @ApiErrorsOld(400, 401)
   @Patch('me/password')
   async changePassword(@Req() req: Request, @Body() data: ChangePasswordDTO) {
     await this.userService.changePassword(data, Number(req?.user?.id));
     return ResponseService.format({ message: 'Change password successfully!' });
   }
 
+  @ApiOperation({ summary: 'Get current user permissions' })
+  @ApiQuery({
+    name: 'resource',
+    required: false,
+    type: 'string',
+    description: 'Filter by resource',
+  })
+  @ApiOkResponse({ description: 'User permissions retrieved' })
   @Get('me/permissions')
   async getUserPermission(
     @Req() req: Request,

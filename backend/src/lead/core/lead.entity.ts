@@ -51,10 +51,10 @@ export class Lead {
   })
   status!: LeadStatus;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn()
   createdAt!: Date;
 
-  @UpdateDateColumn({ select: false })
+  @UpdateDateColumn()
   updatedAt!: Date;
 
   @OneToMany(() => LeadNote, (ln) => ln.lead)

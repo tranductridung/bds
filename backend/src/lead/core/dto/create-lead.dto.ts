@@ -8,7 +8,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateLeadDto {
   @ApiProperty({
@@ -27,20 +27,18 @@ export class CreateLeadDto {
   @MaxLength(255)
   fullName!: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Phone number of the lead',
     example: '0123456789',
-    required: false,
   })
   @IsOptional()
   @IsString()
   @MaxLength(15)
   phoneNumber?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Requirements of the lead',
     example: 'I am looking for a house with a garden.',
-    required: false,
   })
   @IsOptional()
   @IsString()

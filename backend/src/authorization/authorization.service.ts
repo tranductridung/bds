@@ -10,8 +10,8 @@ import {
 import { Role } from './entities/role.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Level } from './enums/authorization.enum';
+import { UserService } from '../user/user.service';
 import { User } from '../user/entities/user.entity';
-import { UserService } from 'src/user/user.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UserRole } from './entities/user-role.entity';
 import { CreateRoleDto } from './dtos/create-role.dto';
@@ -94,10 +94,9 @@ export class AuthorizationService {
   }
 
   async updateRole(id: number, updateRoleDto: UpdateRoleDto) {
-    if (updateRoleDto.name === 'superadmin')
-      throw new BadRequestException('Cannot update SuperAdmin role!');
-
     const role = await this.findRole(id);
+    if (role.name === 'superadmin' || updateRoleDto.name === 'superadmin')
+      throw new BadRequestException('Cannot update SuperAdmin role!');
 
     this.roleRepo.merge(role, updateRoleDto);
     await this.roleRepo.save(role);
@@ -472,7 +471,8 @@ export class AuthorizationService {
     this.eventEmitter.emit(AlertEvents.AUTHOR_ROLE_ASSIGNED, {
       receiverIds: [userId],
       actorId: currentUserId,
-      newRole: newUserRole.role.name,
+      // newRole: newUserRole.role.name,
+      newRole: role.name,
     });
 
     return newUserRole;

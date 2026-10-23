@@ -1,7 +1,6 @@
-import { OmitType } from '@nestjs/swagger';
 import { CreateLeadDto } from './create-lead.dto';
-import { PartialType } from '@nestjs/mapped-types';
+import { PartialType, OmitType } from '@nestjs/swagger';
 
-export class UpdateLeadDto extends OmitType(PartialType(CreateLeadDto), [
-  'email',
-] as const) {}
+export class UpdateLeadDto extends PartialType(
+  OmitType(CreateLeadDto, ['email'] as const),
+) {}

@@ -24,8 +24,18 @@ import { ResponseService } from '@/src/common/helpers/response.service';
 import { PropertySystemUserGuard } from '../guards/property-system-user.guard';
 import { PermissionsGuard } from '@/src/authorization/guards/permission.guard';
 import { RequirePermissions } from '@/src/authentication/decorators/permissions.decorator';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiParam,
+  ApiBody,
+  ApiOkResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
+import { ApiErrorsOld } from '@/src/common/decorators/error-response.decorator';
 
+@ApiTags('Property Agents')
 @ApiBearerAuth('access-token')
 @UseGuards(AuthJwtGuard, PermissionsGuard)
 @Controller('properties/:propertyId/agents')
@@ -34,6 +44,11 @@ export class PropertyAgentController {
 
   @RequirePermissions('property:agent:create')
   @UseGuards(PropertySystemUserGuard)
+  @ApiOperation({ summary: 'Add an agent to a property' })
+  @ApiParam({ name: 'propertyId', description: 'Property ID', type: 'number' })
+  @ApiBody({ schema: { properties: { agentId: { type: 'number' } } } })
+  @ApiOkResponse({ description: 'Agent added to property successfully' })
+  @ApiErrorsOld(400, 404)
   @Post()
   @AuditLog({
     action: AuditLogAction.CREATE,
@@ -62,6 +77,12 @@ export class PropertyAgentController {
   @RequirePermissions('property:agent:read')
   @Get()
   @UseGuards(PropertyAccessGuard)
+  @ApiOperation({ summary: 'Get all agents for a property' })
+  @ApiParam({ name: 'propertyId', description: 'Property ID', type: 'number' })
+  @ApiQuery({ name: 'page', required: false, type: 'number' })
+  @ApiQuery({ name: 'limit', required: false, type: 'number' })
+  @ApiOkResponse({ description: 'Property agents retrieved successfully' })
+  @ApiErrorsOld(404)
   async getAgentsOfProperty(
     @Param('propertyId', ParseIntPipe) propertyId: number,
     @Query() paginationDto: PaginationDto,
@@ -75,6 +96,11 @@ export class PropertyAgentController {
   }
 
   @RequirePermissions('property:agent:delete')
+  @ApiOperation({ summary: 'Remove an agent from a property' })
+  @ApiParam({ name: 'propertyId', description: 'Property ID', type: 'number' })
+  @ApiParam({ name: 'agentId', description: 'Agent ID', type: 'number' })
+  @ApiOkResponse({ description: 'Agent removed from property successfully' })
+  @ApiErrorsOld(404)
   @Delete(':agentId')
   @UseGuards(PropertySystemUserGuard)
   @AuditLog({

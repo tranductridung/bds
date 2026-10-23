@@ -22,10 +22,10 @@ export class RefreshToken {
   @Column({ type: 'date', nullable: true })
   revokedAt!: Date | null;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn()
   createdAt!: Date;
 
-  @UpdateDateColumn({ select: false })
+  @UpdateDateColumn()
   updatedAt!: Date;
 
   @ManyToOne(() => User, (user) => user.refreshTokens, {

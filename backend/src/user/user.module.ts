@@ -5,8 +5,8 @@ import { MailModule } from '../mail/mail.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserController } from './user.controller';
 import { forwardRef, Module } from '@nestjs/common';
-import { AuthorizationModule } from 'src/authorization/authorization.module';
 import { RefreshTokenModule } from '../refresh-token/refresh-token.module';
+import { AuthorizationModule } from '../authorization/authorization.module';
 
 @Module({
   imports: [

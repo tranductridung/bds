@@ -142,7 +142,7 @@ export class UserSeed {
     }
   }
 
-  async seedStaff(email: string) {
+  async seedStaff(email: string, isVerified: boolean) {
     const queryRunner = this.dataSource.createQueryRunner();
 
     await queryRunner.connect();
@@ -169,7 +169,7 @@ export class UserSeed {
         fullName: 'Staff',
         email,
         password: hashedPassword,
-        status: UserStatus.ACTIVE,
+        status: isVerified ? UserStatus.ACTIVE : UserStatus.UNVERIFIED,
       });
 
       await queryRunner.manager.save(user);

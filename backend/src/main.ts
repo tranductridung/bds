@@ -1,41 +1,38 @@
 import 'dotenv/config';
 import { AppModule } from './app.module';
 import { NestFactory } from '@nestjs/core';
-import * as cookieParser from 'cookie-parser';
-import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { AllExceptionsFilter } from './log/system-log/filters/app-exception.filter';
-import { AuditInterceptor } from './log/audit-log/interceptors/audit-log.interceptor';
+import { setupApp } from './setup-app';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  app.use(cookieParser());
-  app.set('trust proxy', true);
-  app.setGlobalPrefix('api/v1');
-  app.useGlobalInterceptors(app.get(AuditInterceptor));
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      forbidNonWhitelisted: true,
-    }),
-  );
+  // app.use(cookieParser());
+  // app.set('trust proxy', true);  
+  // app.setGlobalPrefix('api/v1');
+  // app.useGlobalInterceptors(app.get(AuditInterceptor));
+  // app.useGlobalPipes(
+  //   new ValidationPipe({
+  //     transform: true,
+  //     whitelist: true,
+  //     forbidNonWhitelisted: true,
+  //   }),
+  // );
 
-  const exceptionFilter = app.get(AllExceptionsFilter);
-  app.useGlobalFilters(exceptionFilter);
+  // const exceptionFilter = app.get(AllExceptionsFilter);
+  // app.useGlobalFilters(exceptionFilter);
 
-  app.enableCors({
-    origin: [
-      process.env.FRONTEND_URL || 'http://localhost:5173',
-      process.env.BACKEND_URL || 'http://localhost:3000',
-      /https:\/\/.*\.vercel\.app$/,
-    ],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  });
-
+  // app.enableCors({
+  //   origin: [
+  //     process.env.FRONTEND_URL || 'http://localhost:5173',
+  //     process.env.BACKEND_URL || 'http://localhost:3000',
+  //     /https:\/\/.*\.vercel\.app$/,
+  //   ],
+  //   credentials: true,
+  //   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  //   allowedHeaders: ['Content-Type', 'Authorization'],
+  // });
+  setupApp(app);
   // ─── Swagger Configuration ───────────────────────────────────────────
   const config = new DocumentBuilder()
     .setTitle('🏠 FirstHome API')
@@ -76,19 +73,6 @@ Use the "Authorize" button to enter a bearer token and test protected endpoints.
       },
       'access-token',
     )
-    // ─── Tags ──────────────────────────────────────────────
-    .addTag('Authentication', '🔐 Authentication and session')
-    .addTag('Authorization', 'Roles and permissions management')
-    .addTag('Features', 'Manage feature catalog')
-    .addTag('Properties', '🏡 List, search and filter real estate')
-    .addTag('Property Images', 'Upload and manage property images')
-    .addTag('Property Agents', 'Assign agents to properties')
-    .addTag('Property Features', 'Assign features to properties')
-    .addTag('Ratings', 'Property ratings and reviews')
-    .addTag('Leads', 'Lead capture and management')
-    .addTag('Notifications', 'Push, email and in-app alerts')
-    .addTag('Reminders', 'Reminder scheduling and delivery')
-    .addTag('Users', '👤 Manage user profiles and permissions')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

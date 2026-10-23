@@ -68,10 +68,10 @@ export class Property {
   })
   systemStatus!: PropertySystemStatus;
 
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn()
   createdAt!: Date;
 
-  @UpdateDateColumn({ select: false })
+  @UpdateDateColumn()
   updatedAt!: Date;
 
   @OneToMany(() => PropertyFeature, (pf) => pf.property)

@@ -35,10 +35,10 @@ export class LeadAssignmentService {
       });
 
       if (!assignment)
-        throw new NotFoundException('Agent is not assigned to this lead');
+        throw new BadRequestException('Agent is not assigned to this lead');
 
       if (assignment.isPrimary)
-        throw new BadRequestException('Already primary');
+        throw new BadRequestException('User is already primary');
 
       const oldPrimaryAssignment = await manager.findOne(LeadAssignment, {
         where: {

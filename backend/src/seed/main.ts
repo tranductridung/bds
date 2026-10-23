@@ -8,7 +8,7 @@ async function bootstrap() {
 
   await seedService.seedData();
 
-  await app.close();
+  await app?.close();
 }
 
 bootstrap().catch((err) => {

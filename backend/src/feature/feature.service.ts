@@ -33,13 +33,7 @@ export class FeatureService {
       normalizedName,
     });
 
-    try {
-      await this.featureRepo.save(feature);
-    } catch (err) {
-      if (err.code === 'ER_DUP_ENTRY' || err.code === '23505')
-        throw new ConflictException('Feature name already exists');
-      throw err;
-    }
+    await this.featureRepo.save(feature);
 
     return feature;
   }
@@ -47,7 +41,6 @@ export class FeatureService {
   async findAll(paginationDto?: PaginationDto) {
     const queryBuilder = this.featureRepo
       .createQueryBuilder('feature')
-      .addSelect(['feature.createdAt'])
       .orderBy('feature.createdAt', 'DESC');
 
     if (
