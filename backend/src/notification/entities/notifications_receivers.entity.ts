@@ -32,7 +32,7 @@ export class NotificationReceiver {
     (notification) => notification.notificationReceivers,
     {
       onDelete: 'RESTRICT',
-    }
+    },
   )
   @JoinColumn({ name: 'notificationId' })
   notification!: Notification;

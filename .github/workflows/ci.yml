@@ -39,3 +39,10 @@ jobs:
 
       - name: Unit test
         run: npm test
+
+      - name: Prepare test env
+        run: cp .env.test .env
+
+      - name: E2E test
+        run: npm run test:e2e
+        timeout-minutes: 10

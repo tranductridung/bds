@@ -7,8 +7,8 @@ export function buildDiff<T extends object>(before: T, patch: Partial<T>) {
     const next = patch[key];
 
     if (next !== undefined && prev !== next) {
-      oldValue[key as string] = prev as unknown;
-      newValue[key as string] = next as unknown;
+      oldValue[key as string] = prev;
+      newValue[key as string] = next;
     }
   }
 
