@@ -116,7 +116,7 @@ describe('AuthorizationService', () => {
       roleRepo.findOneBy.mockResolvedValue(null);
       roleRepo.create.mockReturnValue(created);
 
-      const result = await service.createRole(dto as never);
+      const result = await service.createRole(dto);
 
       expect(roleRepo.findOneBy).toHaveBeenCalledWith({ name: 'editor' });
       expect(roleRepo.create).toHaveBeenCalledWith(dto);
@@ -127,9 +127,9 @@ describe('AuthorizationService', () => {
     it('should throw Conflict when the role name already exists', async () => {
       roleRepo.findOneBy.mockResolvedValue({ id: 1, name: 'editor' });
 
-      await expect(
-        service.createRole({ name: 'editor' } as never),
-      ).rejects.toThrow(ConflictException);
+      await expect(service.createRole({ name: 'editor' })).rejects.toThrow(
+        ConflictException,
+      );
       expect(roleRepo.save).not.toHaveBeenCalled();
     });
   });
@@ -138,7 +138,7 @@ describe('AuthorizationService', () => {
     it('should merge, save and return the updated role', async () => {
       stubFindRole({ id: 1, name: 'editor' });
 
-      const result = await service.updateRole(1, { name: 'writer' } as never);
+      const result = await service.updateRole(1, { name: 'writer' });
 
       expect(roleRepo.save).toHaveBeenCalledTimes(1);
       expect(result).toMatchObject({ id: 1, name: 'writer' });
@@ -148,7 +148,7 @@ describe('AuthorizationService', () => {
       stubFindRole({ id: 1, name: 'editor' });
 
       await expect(
-        service.updateRole(1, { name: 'superadmin' } as never),
+        service.updateRole(1, { name: 'superadmin' }),
       ).rejects.toThrow(BadRequestException);
       expect(roleRepo.save).not.toHaveBeenCalled();
     });
@@ -156,9 +156,9 @@ describe('AuthorizationService', () => {
     it('should propagate NotFound and not save when the role does not exist', async () => {
       stubFindRoleFails();
 
-      await expect(
-        service.updateRole(99, { name: 'x' } as never),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.updateRole(99, { name: 'x' })).rejects.toThrow(
+        NotFoundException,
+      );
       expect(roleRepo.save).not.toHaveBeenCalled();
     });
 
@@ -167,9 +167,9 @@ describe('AuthorizationService', () => {
     it('should NOT allow updating the superadmin role itself', async () => {
       stubFindRole({ id: 1, name: 'superadmin' });
 
-      await expect(
-        service.updateRole(1, { name: 'owner' } as never),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.updateRole(1, { name: 'owner' })).rejects.toThrow(
+        BadRequestException,
+      );
       expect(roleRepo.save).not.toHaveBeenCalled();
     });
 
@@ -226,7 +226,7 @@ describe('AuthorizationService', () => {
         .spyOn(service, 'findRoleByName')
         .mockResolvedValue({ id: 1 } as never);
 
-      await service.createPermission(dto as never);
+      await service.createPermission(dto);
 
       expect(permissionRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({ key: 'post:update' }),
@@ -240,7 +240,7 @@ describe('AuthorizationService', () => {
         .spyOn(service, 'findRoleByName')
         .mockResolvedValue(superadmin as never);
 
-      const result = await service.createPermission(dto as never);
+      const result = await service.createPermission(dto);
 
       expect(findByName).toHaveBeenCalledWith('superadmin');
       expect(rolePermissionRepo.create).toHaveBeenCalledWith({
@@ -266,7 +266,7 @@ describe('AuthorizationService', () => {
     it('should throw Forbidden for a system level permission', async () => {
       stubFindPermission({ id: 1, level: Level.SYSTEM });
 
-      await expect(service.updatePermission(1, {} as never)).rejects.toThrow(
+      await expect(service.updatePermission(1, {})).rejects.toThrow(
         ForbiddenException,
       );
       expect(permissionRepo.save).not.toHaveBeenCalled();
@@ -281,7 +281,7 @@ describe('AuthorizationService', () => {
 
       const result = await service.updatePermission(1, {
         description: 'new',
-      } as never);
+      });
 
       expect(permissionRepo.save).toHaveBeenCalledTimes(1);
       expect(result).toMatchObject({ id: 1, description: 'new' });
@@ -290,7 +290,7 @@ describe('AuthorizationService', () => {
     it('should propagate NotFound when the permission does not exist', async () => {
       stubFindPermissionFails();
 
-      await expect(service.updatePermission(99, {} as never)).rejects.toThrow(
+      await expect(service.updatePermission(99, {})).rejects.toThrow(
         NotFoundException,
       );
     });

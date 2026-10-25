@@ -11,7 +11,7 @@ export function normalizeError(exception: unknown): NormalizedError {
         : typeof response === 'object' &&
             response !== null &&
             'message' in response
-          ? String((response as { message: unknown }).message)
+          ? String(response.message)
           : exception.message;
 
     return {

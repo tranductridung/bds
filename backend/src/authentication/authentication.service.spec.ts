@@ -703,7 +703,7 @@ describe('Authentication Service - login', () => {
     it('should verify the token with the reset secret and reset the password of its owner', async () => {
       jwtService.verify.mockReturnValue({ sub: 42, email: 'a@test.com' });
 
-      await authService.resetPassword(dto as never);
+      await authService.resetPassword(dto);
 
       expect(jwtService.verify).toHaveBeenCalledWith('reset-token', {
         secret: 'reset-secret',
@@ -790,7 +790,7 @@ describe('Authentication Service - login', () => {
       const user = { id: 1, status: UserStatus.UNVERIFIED, password: null };
       userService.findOne.mockResolvedValue(user);
 
-      await authService.setupPassword(1, dto as never);
+      await authService.setupPassword(1, dto);
 
       expect(bcrypt.hash).toHaveBeenCalledWith('NewPass123!', 10);
       expect(dataSource.manager.save).toHaveBeenCalledWith(
@@ -806,7 +806,7 @@ describe('Authentication Service - login', () => {
       const user = { id: 1, status: UserStatus.UNVERIFIED, password: null };
       userService.findOne.mockResolvedValue(user);
 
-      await authService.setupPassword(1, dto as never);
+      await authService.setupPassword(1, dto);
 
       expect(user.password).not.toBe('NewPass123!');
     });
@@ -815,7 +815,7 @@ describe('Authentication Service - login', () => {
       const user = { id: 1, status: UserStatus.UNVERIFIED, password: null };
       userService.findOne.mockResolvedValue(user);
 
-      await authService.setupPassword(1, dto as never); // lần 1: user chuyển sang ACTIVE
+      await authService.setupPassword(1, dto); // lần 1: user chuyển sang ACTIVE
 
       await expect(authService.setupPassword(1, dto as never)).rejects.toThrow(
         BadRequestException,

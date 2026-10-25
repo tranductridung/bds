@@ -12,7 +12,7 @@ describe('Strategy', () => {
   let qb: Record<string, jest.Mock>;
   let userRepo: { createQueryBuilder: jest.Mock };
 
-  const payload = { sub: 42 } as AuthJwtPayload;
+  const payload = { sub: 42 };
 
   const buildUser = (overrides: Record<string, unknown> = {}) => ({
     id: 42,
