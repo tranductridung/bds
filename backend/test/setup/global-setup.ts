@@ -10,11 +10,12 @@ export default async () => {
     .start();
 
   process.env.NODE_ENV = 'test';
-  process.env.DB_HOST = container.getHost();
-  process.env.DB_PORT = String(container.getPort());
-  process.env.DB_USERNAME = 'test';
-  process.env.DB_PASSWORD = 'test';
-  process.env.DB_NAME = 'app_test';
+  process.env.RATE_LIMIT_ENABLED = 'false';
+  process.env.MYSQL_HOST = container.getHost();
+  process.env.MYSQL_PORT = String(container.getPort());
+  process.env.MYSQL_USERNAME = 'root';
+  process.env.MYSQL_ROOT_PASSWORD = 'root';
+  process.env.MYSQL_DATABASE = 'app_test';
   process.env.JWT_SECRET = 'e2e-secret';
 
   const redis = await new RedisContainer('redis:7').start();
