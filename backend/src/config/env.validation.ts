@@ -46,9 +46,6 @@ export const envValidationSchema = Joi.object({
   CLOUDINARY_API_SECRET: Joi.string().required(),
 
   // ---- Redis ----
-  REDIS_URL: Joi.string()
-    .uri({ scheme: ['redis', 'rediss'] })
-    .optional(),
   REDIS_HOST: Joi.string().optional(),
   REDIS_PORT: Joi.number().default(6379),
 
@@ -58,4 +55,4 @@ export const envValidationSchema = Joi.object({
   RATE_LIMIT_ENABLED: Joi.boolean().default(true),
   REQUEST_LIMIT_DEFAULT: Joi.number().integer().positive().default(100),
   RATE_LIMIT_TTL_DEFAULT: Joi.number().positive().default(60),
-}).or('REDIS_URL', 'REDIS_HOST'); // at least 1 option (total 2 option) to config Redis
+});

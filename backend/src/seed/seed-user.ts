@@ -52,8 +52,9 @@ export class UserSeed {
 
       const password =
         this.configService.get<string>('SUPERADMIN_PASSWORD') || 'superadmin';
+      const salt = parseInt(this.configService.get('SALT') ?? '10', 10);
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = await bcrypt.hash(password, salt);
 
       const user = queryRunner.manager.create(User, {
         fullName: 'Super Admin',
@@ -107,8 +108,9 @@ export class UserSeed {
 
       // Create user
       const password = 'admin';
+      const salt = parseInt(this.configService.get('SALT') ?? '10', 10);
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = await bcrypt.hash(password, salt);
 
       const user = queryRunner.manager.create(User, {
         fullName: 'Admin',
@@ -163,7 +165,8 @@ export class UserSeed {
       // Create user
       const password = 'staff';
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const salt = parseInt(this.configService.get('SALT') ?? '10', 10);
+      const hashedPassword = await bcrypt.hash(password, salt);
 
       const user = queryRunner.manager.create(User, {
         fullName: 'Staff',

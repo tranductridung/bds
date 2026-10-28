@@ -34,6 +34,7 @@ export class RefreshTokenService {
     const numberTokenOfUser = await this.countTokenByUser(userId);
 
     const maxToken = parseInt(this.configService.get('MAX_TOKEN') ?? '5', 10);
+    const salt = parseInt(this.configService.get('SALT') ?? '10', 10);
 
     // Delete oldest token
     if (numberTokenOfUser >= maxToken) {
@@ -48,7 +49,7 @@ export class RefreshTokenService {
       if (oldestToken) await this.remove(oldestToken.id);
     }
 
-    const hashedToken = await bcrypt.hash(refreshToken, 10);
+    const hashedToken = await bcrypt.hash(refreshToken, salt);
     const user = await this.userService.findOne(userId, true);
     const token = this.tokenRepository.create({
       hashedToken,

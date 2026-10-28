@@ -14,6 +14,7 @@ export class SeedService {
   async seedData() {
     await this.permissionSeed.seed();
     await this.roleSeed.seed();
+    
     await this.userSeed.seedSuperadmin();
 
     await this.userSeed.seedAdmin('admin1@gmail.com');

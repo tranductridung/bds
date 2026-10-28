@@ -50,8 +50,12 @@ export class RoleSeed {
           continue; // User not superadmin dont have manage system permission
         }
 
-        if (roleName === 'staff' && permission.resource === 'testadmin') {
-          continue; // Staff user dont have testadmin permission
+        const staffDeniedResources = ['user', 'log:audit', 'log:system'];
+        if (
+          roleName === 'staff' &&
+          staffDeniedResources.includes(permission.resource)
+        ) {
+          continue; // Staff don't have permission in staffDeniedResources
         }
 
         if (!existingPermissionIds.has(permission.id)) {
