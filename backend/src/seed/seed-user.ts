@@ -106,6 +106,14 @@ export class UserSeed {
         return;
       }
 
+      // Skip if user already exists
+      const existingUser = await queryRunner.manager.findOneBy(User, { email });
+      if (existingUser) {
+        console.log(`Admin ${email} already exists, skipping.`);
+        await queryRunner.rollbackTransaction();
+        return;
+      }
+
       // Create user
       const password = 'admin';
       const salt = parseInt(this.configService.get('SALT') ?? '10', 10);
@@ -158,6 +166,14 @@ export class UserSeed {
 
       if (!staffRole) {
         console.log('Role staff not found! Please seed roles first.');
+        await queryRunner.rollbackTransaction();
+        return;
+      }
+
+      // Skip if user already exists
+      const existingUser = await queryRunner.manager.findOneBy(User, { email });
+      if (existingUser) {
+        console.log(`User ${email} already exists, skipping.`);
         await queryRunner.rollbackTransaction();
         return;
       }
